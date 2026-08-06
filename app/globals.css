@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* Dark theme cloned from the evekayser.com.br reference: near-black
+ * background with a teal/mint radial glow, mint accent, geometric display
+ * font. Exact hex values aren't recoverable from a screenshot (source is a
+ * Webflow site with no public design tokens) — approximated by eye. */
+@theme {
+  --color-background: #05080a;
+  --color-surface: #0e1613;
+  --color-foreground: #f2f5f4;
+  --color-muted: #9faba7;
+  --color-border: #1c2624;
+  --color-accent: #2ee6b8;
+  --color-accent-2: #1a9e83;
+
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-background);
+  background-image:
+    radial-gradient(
+      ellipse 900px 600px at 0% 0%,
+      color-mix(in srgb, var(--color-accent) 16%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 700px 500px at 100% 20%,
+      color-mix(in srgb, var(--color-accent) 10%, transparent),
+      transparent 60%
+    );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+}
+
+.text-gradient {
+  background: linear-gradient(
+    90deg,
+    var(--color-foreground),
+    var(--color-accent)
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.bg-gradient-accent {
+  background: linear-gradient(
+    90deg,
+    var(--color-accent),
+    var(--color-accent-2)
+  );
+}
+
+/* Shared keyboard-focus treatment (docs request: every interactive element
+ * needs a defined, visible :focus-visible state) — never rely on the
+ * browser default outline color, it's invisible on this dark background. */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

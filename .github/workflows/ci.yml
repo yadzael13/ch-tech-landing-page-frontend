@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build frontend image
+        run: docker build -f docker/frontend/Dockerfile.dev -t ch-tech-frontend:ci .
+
+      - name: Test frontend (Vitest, with coverage)
+        run: docker run --rm ch-tech-frontend:ci npm run test:coverage

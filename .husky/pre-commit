@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# This repo runs standalone (npm run dev), not behind Docker Compose — see
+# .env.example. node_modules/.bin/lint-staged is expected to exist after a
+# plain `npm install`, but never block a commit if it doesn't: best-effort
+# lint locally, CI is the real gate either way.
+node_modules/.bin/lint-staged --config lint-staged.config.mjs 2>/dev/null \
+  || echo "husky: skipping lint-staged (no runnable local install — CI still enforces lint/format)."
+
+exit 0
