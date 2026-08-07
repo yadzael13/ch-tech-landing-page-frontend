@@ -45,7 +45,7 @@
       `prefers-reduced-motion` verificado solo por test unitario (el
       navegador de esta sesión no expone emulación de esa media query).
 - [x] Commit (`feat(design): add visual redesign foundation (tokens, ui
-    primitives, splash)`, b2af3f0).
+  primitives, splash)`, b2af3f0).
 
 ## Fase 1 — Landing público
 
@@ -73,15 +73,26 @@
       de este navegador automatizado (pane sin compositing de frames);
       la cobertura de tests unitarios cubre la lógica exacta.
 - [x] Commit (`feat(landing): wire scroll-reveal and motion into the
-    public landing page`, 47497e8).
+  public landing page`, 47497e8).
 
-## Fase 2 — Admin: login, shell, home (pendiente de checkpoint)
+## Fase 2 — Admin: login, shell, home
 
-- [ ] Login: `<Card>` + monograma de marca
-- [ ] `AdminShell`: `<Spinner>` en vez de "Cargando..."
-- [ ] Dashboard home: `<Card>` (sin `<Reveal>`)
-- [ ] Actualizar `AdminShell.test.tsx` (`getByRole('status')`)
-- [ ] Verificación + commit
+- [x] Login: `<Card>` con `shadow-elevated` + monograma "CH" (mismo motivo
+      que `SplashScreen`), migrado a `Field`/`Input`/`Button`
+- [x] `AdminShell`: `<Spinner>` en vez de "Cargando...", "Salir" migrado a
+      `Button`
+- [x] Dashboard home: las 11 link-cards comparten un `cardClassName`
+      computado en vez de repetir el mismo string 11 veces (sin `<Reveal>`,
+      deliberado — el admin prioriza velocidad sobre flourish de marketing)
+- [x] Nuevo test en `AdminShell.test.tsx` — spinner visible mientras la
+      sesión está en verificación (`role="status"`, vía `delay("infinite")`
+      de MSW)
+- [x] Verificación: lint limpio, 232/232 tests, cobertura 90.67%/84.47%/
+      82.97%/90.48%. Sin verificación manual en navegador esta fase — el
+      entorno de browser automatizado de esta sesión demostró ser poco
+      fiable (ver nota de Fase 1); se confía en la cobertura de tests.
+- [x] Commit (`feat(admin): polish login, shell chrome, and dashboard
+    home`, 4ffc591).
 
 ## Fase 3 — 10 entidades CRUD admin (pendiente de checkpoint)
 
