@@ -19,17 +19,19 @@ export default async function Hero() {
 
   return (
     <section className="mx-auto flex max-w-4xl flex-col items-start gap-6 px-6 py-24 md:py-32">
-      <span className="rounded-full border border-border px-3 py-1 text-xs font-medium tracking-widest text-accent uppercase">
+      <span className="animate-fade-in-up rounded-full border border-border px-3 py-1 text-xs font-medium tracking-widest text-accent uppercase">
         {hero.eyebrow}
       </span>
 
-      <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold tracking-tight text-foreground md:text-6xl">
+      <h1 className="animate-fade-in-up font-[family-name:var(--font-display)] text-4xl font-bold tracking-tight text-foreground [animation-delay:80ms] md:text-6xl">
         {headline}
       </h1>
 
-      <p className="max-w-2xl text-lg text-muted">{subtext}</p>
+      <p className="animate-fade-in-up max-w-2xl text-lg text-muted [animation-delay:160ms]">
+        {subtext}
+      </p>
 
-      <div className="flex flex-wrap items-center gap-4 pt-2">
+      <div className="animate-fade-in-up flex flex-wrap items-center gap-4 pt-2 [animation-delay:240ms]">
         <a
           href={hero.primaryCta.href}
           className="focus-ring group flex items-center gap-3 rounded-full border border-border bg-surface py-2 pr-2 pl-6 text-sm font-medium text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent hover:shadow-[0_0_24px_-8px_var(--color-accent)] active:scale-[0.98]"

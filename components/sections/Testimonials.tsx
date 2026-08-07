@@ -1,4 +1,8 @@
 import { getTestimonials } from "@/lib/api/content";
+import { cardClassName } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Reveal } from "@/components/ui/Reveal";
 
 export default async function Testimonials() {
   let testimonials: Awaited<ReturnType<typeof getTestimonials>> = [];
@@ -17,23 +21,24 @@ export default async function Testimonials() {
       </h2>
 
       {hasError && (
-        <p className="mt-6 text-sm text-muted">
-          No fue posible cargar los testimonios en este momento.
-        </p>
+        <ErrorState message="No fue posible cargar los testimonios en este momento." />
       )}
 
       {!hasError && testimonials.length === 0 && (
-        <p className="mt-6 text-sm text-muted">
-          Aún no hay testimonios publicados.
-        </p>
+        <EmptyState message="Aún no hay testimonios publicados." />
       )}
 
       {!hasError && testimonials.length > 0 && (
         <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <figure
+          {testimonials.map((testimonial, index) => (
+            <Reveal
+              as="figure"
               key={testimonial.id}
-              className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6"
+              delayMs={index * 60}
+              className={cardClassName({
+                interactive: true,
+                className: "flex flex-col gap-4",
+              })}
             >
               <blockquote className="text-sm text-foreground">
                 “{testimonial.content}”
@@ -44,7 +49,7 @@ export default async function Testimonials() {
                 </span>
                 {testimonial.author_role && <> — {testimonial.author_role}</>}
               </figcaption>
-            </figure>
+            </Reveal>
           ))}
         </div>
       )}

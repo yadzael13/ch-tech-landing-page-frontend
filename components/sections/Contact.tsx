@@ -3,15 +3,17 @@
 import { FormEvent, useState } from "react";
 import { ApiError } from "@/lib/api/client";
 import { submitContact } from "@/lib/api/content";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 
 type Status = "idle" | "submitting" | "success" | "error";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out placeholder:text-muted hover:border-accent/60";
 
 export default function Contact() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [messageError, setMessageError] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -19,16 +21,18 @@ export default function Contact() {
     const formData = new FormData(form);
     const message = String(formData.get("message") ?? "");
 
+    setMessageError(null);
+    setErrorMessage(null);
+
     // Mirrors docs/API.md "Validation Rules" -> Contact, so obviously invalid
     // input never round-trips to the API just to be rejected.
     if (message.length < 20 || message.length > 5000) {
       setStatus("error");
-      setErrorMessage("El mensaje debe tener entre 20 y 5000 caracteres.");
+      setMessageError("El mensaje debe tener entre 20 y 5000 caracteres.");
       return;
     }
 
     setStatus("submitting");
-    setErrorMessage(null);
 
     try {
       await submitContact({
@@ -69,70 +73,54 @@ export default function Contact() {
         noValidate
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm text-muted">
-            Nombre
-            <input
-              name="name"
-              type="text"
-              required
-              maxLength={255}
-              className={inputClass}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-muted">
-            Email
-            <input name="email" type="email" required className={inputClass} />
-          </label>
+          <Field label="Nombre">
+            <Input name="name" type="text" required maxLength={255} />
+          </Field>
+          <Field label="Email">
+            <Input name="email" type="email" required />
+          </Field>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm text-muted">
-            Empresa (opcional)
-            <input
-              name="company"
-              type="text"
-              maxLength={255}
-              className={inputClass}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-muted">
-            Asunto (opcional)
-            <input
-              name="subject"
-              type="text"
-              maxLength={255}
-              className={inputClass}
-            />
-          </label>
+          <Field label="Empresa (opcional)">
+            <Input name="company" type="text" maxLength={255} />
+          </Field>
+          <Field label="Asunto (opcional)">
+            <Input name="subject" type="text" maxLength={255} />
+          </Field>
         </div>
 
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Mensaje
-          <textarea
+        <Field label="Mensaje" error={messageError ?? undefined}>
+          <Textarea
             name="message"
             required
             minLength={20}
             maxLength={5000}
             rows={5}
-            className={inputClass}
           />
-        </label>
+        </Field>
 
-        <button
+        <Button
           type="submit"
           disabled={status === "submitting"}
-          className="focus-ring mt-2 w-fit rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+          className="mt-2 w-fit"
         >
           {status === "submitting" ? "Enviando..." : "Enviar mensaje"}
-        </button>
+        </Button>
 
         {status === "success" && (
-          <p role="status" className="text-sm text-accent">
+          <p
+            role="status"
+            className="translate-y-0 text-sm text-accent opacity-100 transition-[opacity,transform] duration-200 ease-out starting:translate-y-1 starting:opacity-0"
+          >
             Mensaje enviado. Te responderemos pronto.
           </p>
         )}
         {status === "error" && errorMessage && (
-          <p role="alert" className="text-sm text-red-400">
+          <p
+            role="alert"
+            className="translate-y-0 text-sm text-danger opacity-100 transition-[opacity,transform] duration-200 ease-out starting:translate-y-1 starting:opacity-0"
+          >
             {errorMessage}
           </p>
         )}

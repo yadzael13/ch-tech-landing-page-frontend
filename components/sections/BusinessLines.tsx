@@ -1,4 +1,8 @@
 import { getServiceLines } from "@/lib/api/content";
+import { cardClassName } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Reveal } from "@/components/ui/Reveal";
 
 export default async function BusinessLines() {
   let serviceLines: Awaited<ReturnType<typeof getServiceLines>> = [];
@@ -17,23 +21,24 @@ export default async function BusinessLines() {
       </h2>
 
       {hasError && (
-        <p className="mt-6 text-sm text-muted">
-          No fue posible cargar las líneas de negocio en este momento.
-        </p>
+        <ErrorState message="No fue posible cargar las líneas de negocio en este momento." />
       )}
 
       {!hasError && serviceLines.length === 0 && (
-        <p className="mt-6 text-sm text-muted">
-          Aún no hay líneas de negocio publicadas.
-        </p>
+        <EmptyState message="Aún no hay líneas de negocio publicadas." />
       )}
 
       {!hasError && serviceLines.length > 0 && (
         <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {serviceLines.map((line) => (
-            <article
+          {serviceLines.map((line, index) => (
+            <Reveal
+              as="article"
               key={line.id}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent hover:shadow-[0_0_32px_-12px_var(--color-accent)]"
+              delayMs={index * 60}
+              className={cardClassName({
+                interactive: true,
+                className: "flex flex-col gap-3",
+              })}
             >
               <h3 className="font-medium text-foreground">{line.name}</h3>
               {line.description && (
@@ -45,7 +50,7 @@ export default async function BusinessLines() {
               >
                 Solicitar información →
               </a>
-            </article>
+            </Reveal>
           ))}
         </div>
       )}

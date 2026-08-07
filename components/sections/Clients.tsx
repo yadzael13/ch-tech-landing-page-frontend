@@ -1,4 +1,7 @@
 import { getClients } from "@/lib/api/content";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Reveal } from "@/components/ui/Reveal";
 
 export default async function Clients() {
   let clients: Awaited<ReturnType<typeof getClients>> = [];
@@ -17,20 +20,20 @@ export default async function Clients() {
       </h2>
 
       {hasError && (
-        <p className="mt-6 text-sm text-muted">
-          No fue posible cargar los clientes en este momento.
-        </p>
+        <ErrorState message="No fue posible cargar los clientes en este momento." />
       )}
 
       {!hasError && clients.length === 0 && (
-        <p className="mt-6 text-sm text-muted">Aún no hay clientes públicos.</p>
+        <EmptyState message="Aún no hay clientes públicos." />
       )}
 
       {!hasError && clients.length > 0 && (
         <ul className="mt-8 flex flex-wrap items-center gap-8">
-          {clients.map((client) => (
-            <li
+          {clients.map((client, index) => (
+            <Reveal
+              as="li"
               key={client.id}
+              delayMs={index * 60}
               className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-5 py-3 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent"
             >
               {client.logo ? (
@@ -47,7 +50,7 @@ export default async function Clients() {
                   {client.name}
                 </span>
               )}
-            </li>
+            </Reveal>
           ))}
         </ul>
       )}

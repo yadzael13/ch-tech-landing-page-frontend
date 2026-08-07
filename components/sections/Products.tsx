@@ -1,4 +1,9 @@
 import { getProducts } from "@/lib/api/content";
+import { Button } from "@/components/ui/Button";
+import { cardClassName } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Reveal } from "@/components/ui/Reveal";
 
 const STATUS_LABELS: Record<string, string> = {
   WAITLIST: "Lista de espera",
@@ -23,31 +28,32 @@ export default async function Products() {
       </h2>
 
       {hasError && (
-        <p className="mt-6 text-sm text-muted">
-          No fue posible cargar los productos en este momento.
-        </p>
+        <ErrorState message="No fue posible cargar los productos en este momento." />
       )}
 
       {!hasError && products.length === 0 && (
         <div className="mt-6 flex flex-col items-start gap-4">
-          <p className="text-sm text-muted">
-            Estamos construyendo nuestra primera línea de productos SaaS.
-          </p>
-          <a
-            href="#contacto"
-            className="focus-ring w-fit rounded-full border border-border px-6 py-3 text-sm font-medium text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent hover:text-accent active:scale-[0.98]"
-          >
+          <EmptyState
+            message="Estamos construyendo nuestra primera línea de productos SaaS."
+            className="mt-0"
+          />
+          <Button href="#contacto" variant="secondary">
             Únete a la lista de espera
-          </a>
+          </Button>
         </div>
       )}
 
       {!hasError && products.length > 0 && (
         <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {products.map((product) => (
-            <article
+          {products.map((product, index) => (
+            <Reveal
+              as="article"
               key={product.id}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent hover:shadow-[0_0_32px_-12px_var(--color-accent)]"
+              delayMs={index * 60}
+              className={cardClassName({
+                interactive: true,
+                className: "flex flex-col gap-3",
+              })}
             >
               <span className="w-fit rounded-full border border-border px-3 py-1 text-xs font-medium text-accent">
                 {STATUS_LABELS[product.status] ?? product.status}
@@ -68,7 +74,7 @@ export default async function Products() {
                   Ver producto →
                 </a>
               )}
-            </article>
+            </Reveal>
           ))}
         </div>
       )}

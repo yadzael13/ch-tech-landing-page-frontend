@@ -1,5 +1,7 @@
 import { getCompany } from "@/lib/api/content";
 import { about } from "@/lib/content/site";
+import { cardClassName } from "@/components/ui/Card";
+import { Reveal } from "@/components/ui/Reveal";
 
 export default async function About() {
   let intro = about.fallbackIntro;
@@ -20,9 +22,14 @@ export default async function About() {
 
       <ol className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {about.points.map((point, index) => (
-          <li
+          <Reveal
+            as="li"
             key={point.title}
-            className="flex gap-4 rounded-2xl border border-border bg-surface p-6 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent"
+            delayMs={index * 60}
+            className={cardClassName({
+              interactive: true,
+              className: "flex gap-4",
+            })}
           >
             <span className="text-sm font-semibold text-accent">
               {String(index + 1).padStart(2, "0")}
@@ -31,7 +38,7 @@ export default async function About() {
               <p className="font-medium text-foreground">{point.title}</p>
               <p className="mt-1 text-sm text-muted">{point.description}</p>
             </div>
-          </li>
+          </Reveal>
         ))}
       </ol>
     </section>

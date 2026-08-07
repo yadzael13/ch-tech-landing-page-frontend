@@ -1,4 +1,8 @@
 import { getTeamMembers } from "@/lib/api/content";
+import { cardClassName } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Reveal } from "@/components/ui/Reveal";
 
 export default async function Team() {
   let members: Awaited<ReturnType<typeof getTeamMembers>> = [];
@@ -17,23 +21,24 @@ export default async function Team() {
       </h2>
 
       {hasError && (
-        <p className="mt-6 text-sm text-muted">
-          No fue posible cargar el equipo en este momento.
-        </p>
+        <ErrorState message="No fue posible cargar el equipo en este momento." />
       )}
 
       {!hasError && members.length === 0 && (
-        <p className="mt-6 text-sm text-muted">
-          Aún no hay miembros del equipo publicados.
-        </p>
+        <EmptyState message="Aún no hay miembros del equipo publicados." />
       )}
 
       {!hasError && members.length > 0 && (
         <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {members.map((member) => (
-            <article
+          {members.map((member, index) => (
+            <Reveal
+              as="article"
               key={member.id}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent"
+              delayMs={index * 60}
+              className={cardClassName({
+                interactive: true,
+                className: "flex flex-col gap-3",
+              })}
             >
               {member.photo && (
                 // eslint-disable-next-line @next/next/no-img-element -- external, admin-supplied photo URLs; no next/image domain config exists yet.
@@ -47,9 +52,7 @@ export default async function Team() {
                 <p className="font-medium text-foreground">{member.name}</p>
                 <p className="text-sm text-accent">{member.role}</p>
               </div>
-              {member.bio && (
-                <p className="text-sm text-muted">{member.bio}</p>
-              )}
+              {member.bio && <p className="text-sm text-muted">{member.bio}</p>}
               <div className="mt-auto flex gap-4 text-sm">
                 {member.linkedin_url && (
                   <a
@@ -72,7 +75,7 @@ export default async function Team() {
                   </a>
                 )}
               </div>
-            </article>
+            </Reveal>
           ))}
         </div>
       )}
