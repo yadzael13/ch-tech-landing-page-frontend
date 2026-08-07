@@ -44,6 +44,8 @@
   --animate-splash-exit: splash-exit 0.5s ease-in-out forwards;
   --animate-logo-pulse: logo-pulse 1.8s ease-in-out infinite;
   --animate-float-slow: float-slow 10s ease-in-out infinite;
+  --animate-circuit-draw: circuit-draw 900ms var(--ease-out) both;
+  --animate-circuit-travel: circuit-travel 3.2s linear infinite;
 }
 
 @keyframes fade-in-up {
@@ -109,6 +111,27 @@
   }
 }
 
+/* stroke-dashoffset 1 -> 0 works for any path length because each circuit
+ * trace is authored with pathLength="1" (normalizes real geometry to a unit
+ * length), so no getTotalLength() measurement is needed at runtime. */
+@keyframes circuit-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes circuit-travel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
 /* Plain custom properties, not Tailwind theme keys — consumed via arbitrary
  * value syntax (e.g. shadow-[var(--shadow-elevated)]) rather than an
  * auto-generated shadow-elevated utility, since only Dialog/SplashScreen
@@ -118,6 +141,12 @@
   --shadow-elevated: 0 24px 48px -20px rgba(0, 0, 0, 0.55);
   --shadow-glow-accent: 0 0 32px -8px
     color-mix(in srgb, var(--color-accent) 60%, transparent);
+
+  /* Curated cubic-beziers, not the weak built-in ease-out/ease-in-out —
+   * shared across every hand-built animation, not just CircuitBoard. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 body {
@@ -189,6 +218,23 @@ h4 {
     transparent
   );
   background-size: 200% 100%;
+}
+
+/* Ambient baseline vs. lit state for a CircuitBoard corner cluster — a
+ * state transition (occasional, per section), not a loop, so it stays a
+ * plain transition rather than another keyframe animation. */
+.circuit-cluster {
+  opacity: 0.14;
+  transition:
+    opacity 400ms var(--ease-in-out),
+    filter 400ms var(--ease-in-out);
+}
+
+.circuit-cluster--lit {
+  opacity: 0.3;
+  filter: drop-shadow(
+    0 0 6px color-mix(in srgb, var(--color-accent) 70%, transparent)
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {

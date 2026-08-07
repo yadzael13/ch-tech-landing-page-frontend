@@ -1,3 +1,4 @@
+import { CircuitBoard } from "@/components/layout/CircuitBoard";
 import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
 import { SplashScreen } from "@/components/layout/SplashScreen";
@@ -16,6 +17,7 @@ export default function HomePage() {
   return (
     <div id="top">
       <SplashScreen />
+      <CircuitBoard />
       <Navbar />
       <main id="main-content">
         <Hero />
