@@ -44,20 +44,38 @@
       sesión confirmado, 375px sin overflow horizontal, navegación funcional.
       `prefers-reduced-motion` verificado solo por test unitario (el
       navegador de esta sesión no expone emulación de esa media query).
-- [ ] Commit (Conventional Commits, inglés) — pendiente de confirmación del
-      usuario antes de commitear.
+- [x] Commit (`feat(design): add visual redesign foundation (tokens, ui
+    primitives, splash)`, b2af3f0).
 
-## Fase 2 — Landing público (pendiente de checkpoint)
+## Fase 1 — Landing público
 
-- [ ] Hero: animación de entrada directa (sin `Reveal`)
-- [ ] About/TechStack/BusinessLines/Clients/Testimonials/Team/Products/Projects:
-      `<Reveal>` + `<Card>` + `<EmptyState>`/`<ErrorState>`
-- [ ] Contact: `<Field>/<Input>/<Textarea>/<Button>` + `aria-invalid`/
-      `aria-describedby` real
-- [ ] Navbar/Footer: botones a `<Button>`
-- [ ] Verificación + commit
+- [x] Hero: animación de entrada directa (sin `Reveal`), stagger 80ms por
+      elemento
+- [x] About/TechStack/BusinessLines/Clients/Testimonials/Team/Products/Projects:
+      `<Reveal>` + `<Card>`/`cardClassName` + `<EmptyState>`/`<ErrorState>`
+      (de paso corrige el error de TechStack sin `role="alert"` y el hover
+      faltante de Testimonials)
+- [x] Contact: `<Field>/<Input>/<Textarea>/<Button>` + `aria-invalid`/
+      `aria-describedby` real en el error de longitud del mensaje; mensaje
+      de éxito/error animado con `starting:` (`@starting-style`)
+- [x] Navbar: CTA migrado a `<Button>`, menú móvil animado
+      (`animate-scale-in` al abrir, fade-out de 150ms antes de desmontar —
+      mismo patrón de fases que `Dialog`) en vez de aparecer/desaparecer
+      sin transición
+- [x] Footer: revisado, sin cambios — sus links son texto plano sin
+      tratamiento de botón, forzar `<Button>` habría cambiado su
+      comportamiento visual en vez de solo consolidar markup
+- [x] Verificación: lint limpio, 231/231 tests, cobertura 90.58%/84.47%/
+      82.71%/90.39%. Verificación manual parcial — el splash/animaciones se
+      confirmaron estructuralmente (clases correctas, sin overflow a
+      375px, sin errores de consola) pero la interacción en vivo
+      (`IntersectionObserver` real, clicks) no fue confiable en el entorno
+      de este navegador automatizado (pane sin compositing de frames);
+      la cobertura de tests unitarios cubre la lógica exacta.
+- [x] Commit (`feat(landing): wire scroll-reveal and motion into the
+    public landing page`, 47497e8).
 
-## Fase 3 — Admin: login, shell, home (pendiente de checkpoint)
+## Fase 2 — Admin: login, shell, home (pendiente de checkpoint)
 
 - [ ] Login: `<Card>` + monograma de marca
 - [ ] `AdminShell`: `<Spinner>` en vez de "Cargando..."
@@ -65,7 +83,7 @@
 - [ ] Actualizar `AdminShell.test.tsx` (`getByRole('status')`)
 - [ ] Verificación + commit
 
-## Fase 4 — 10 entidades CRUD admin (pendiente de checkpoint)
+## Fase 3 — 10 entidades CRUD admin (pendiente de checkpoint)
 
 - [ ] Por entidad (Articles, CaseStudies, Clients, Company, Partners,
       Products, Projects, Services, Team, Technologies, Testimonials):
@@ -76,7 +94,7 @@
 - [ ] `npm run lint`/`test:coverage` cada 2-3 entidades, no solo al final
 - [ ] Verificación manual de al menos 2 entidades end-to-end + commit
 
-## Fase 5 — Pulido final (pendiente de checkpoint)
+## Fase 4 — Pulido final (pendiente de checkpoint)
 
 - [ ] `app/not-found.tsx`
 - [ ] `app/loading.tsx` + `app/admin/(dashboard)/loading.tsx`
