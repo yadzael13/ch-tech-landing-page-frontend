@@ -7,6 +7,8 @@ import { updateProduct } from "@/lib/api/admin";
 import { getProducts } from "@/lib/api/content";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ProductItem, ProductWrite } from "@/lib/api/types";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonForm } from "@/components/ui/SkeletonForm";
 
 export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -44,13 +46,9 @@ export default function EditProductPage() {
         Editar producto
       </h1>
 
-      {status === "loading" && (
-        <p className="mt-6 text-sm text-muted">Cargando...</p>
-      )}
+      {status === "loading" && <SkeletonForm fields={6} />}
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar el producto.
-        </p>
+        <ErrorState message="No fue posible cargar el producto." />
       )}
       {status === "ready" && product && (
         <div className="mt-6 max-w-2xl">

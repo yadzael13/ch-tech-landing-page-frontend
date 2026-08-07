@@ -1,6 +1,12 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { API_URL, server } from "@/test/msw-server";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import AdminTechnologiesPage from "./page";
@@ -60,7 +66,7 @@ describe("AdminTechnologiesPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("deletes a technology after confirming", async () => {
+  it("deletes a technology after confirming in the dialog", async () => {
     server.use(
       http.get(`${API_URL}/technologies`, () =>
         HttpResponse.json({
@@ -74,15 +80,40 @@ describe("AdminTechnologiesPage", () => {
         () => new HttpResponse(null, { status: 204 }),
       ),
     );
-    vi.spyOn(window, "confirm").mockReturnValue(true);
 
     renderPage();
     await screen.findByText("Python");
 
     fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Eliminar" }));
 
     await waitFor(() =>
       expect(screen.queryByText("Python")).not.toBeInTheDocument(),
     );
+  });
+
+  it("keeps the technology when the delete dialog is cancelled", async () => {
+    server.use(
+      http.get(`${API_URL}/technologies`, () =>
+        HttpResponse.json({
+          success: true,
+          data: [sampleTechnology],
+          message: null,
+        }),
+      ),
+    );
+
+    renderPage();
+    await screen.findByText("Python");
+
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Python")).toBeInTheDocument();
   });
 });

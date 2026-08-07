@@ -1,6 +1,12 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { API_URL, server } from "@/test/msw-server";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import AdminArticlesPage from "./page";
@@ -66,7 +72,7 @@ describe("AdminArticlesPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("deletes an article after confirming", async () => {
+  it("deletes an article after confirming in the dialog", async () => {
     server.use(
       http.get(`${API_URL}/admin/articles`, () =>
         HttpResponse.json({
@@ -80,15 +86,40 @@ describe("AdminArticlesPage", () => {
         () => new HttpResponse(null, { status: 204 }),
       ),
     );
-    vi.spyOn(window, "confirm").mockReturnValue(true);
 
     renderPage();
     await screen.findByText("Deep Dive");
 
     fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Eliminar" }));
 
     await waitFor(() =>
       expect(screen.queryByText("Deep Dive")).not.toBeInTheDocument(),
     );
+  });
+
+  it("keeps the article when the delete dialog is cancelled", async () => {
+    server.use(
+      http.get(`${API_URL}/admin/articles`, () =>
+        HttpResponse.json({
+          success: true,
+          data: [sampleArticle],
+          message: null,
+        }),
+      ),
+    );
+
+    renderPage();
+    await screen.findByText("Deep Dive");
+
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Deep Dive")).toBeInTheDocument();
   });
 });

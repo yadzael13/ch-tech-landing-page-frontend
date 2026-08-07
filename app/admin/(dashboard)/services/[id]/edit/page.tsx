@@ -6,6 +6,8 @@ import ServiceForm from "@/components/admin/ServiceForm";
 import { getAdminService, updateService } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ServiceItem, ServiceWrite } from "@/lib/api/types";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonForm } from "@/components/ui/SkeletonForm";
 
 export default function EditServicePage() {
   const { id } = useParams<{ id: string }>();
@@ -37,13 +39,9 @@ export default function EditServicePage() {
         Editar servicio
       </h1>
 
-      {status === "loading" && (
-        <p className="mt-6 text-sm text-muted">Cargando...</p>
-      )}
+      {status === "loading" && <SkeletonForm fields={4} />}
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar el servicio.
-        </p>
+        <ErrorState message="No fue posible cargar el servicio." />
       )}
       {status === "ready" && service && (
         <div className="mt-6 max-w-2xl">

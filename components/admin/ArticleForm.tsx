@@ -4,9 +4,12 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getTechnologies } from "@/lib/api/content";
 import { ArticleDetail, ArticleWrite, TechnologyItem } from "@/lib/api/types";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent/60";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { FORM_CONTROL_CLASS } from "@/components/ui/formControlClasses";
+import { cx } from "@/lib/cx";
 
 interface ArticleFormProps {
   initialValue?: ArticleDetail;
@@ -75,71 +78,59 @@ export default function ArticleForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Título
-          <input
+        <Field label="Título">
+          <Input
             name="title"
             type="text"
             required
             maxLength={255}
             defaultValue={initialValue?.title}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Slug
-          <input
+        </Field>
+        <Field label="Slug">
+          <Input
             name="slug"
             type="text"
             required
             maxLength={150}
             defaultValue={initialValue?.slug}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Resumen
-        <input
+      <Field label="Resumen">
+        <Input
           name="summary"
           type="text"
           defaultValue={initialValue?.summary ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Contenido
-        <textarea
+      <Field label="Contenido">
+        <Textarea
           name="content"
           required
           rows={10}
           defaultValue={initialValue?.content ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Imagen de portada (URL)
-          <input
+        <Field label="Imagen de portada (URL)">
+          <Input
             name="cover_image"
             type="url"
             defaultValue={initialValue?.cover_image ?? ""}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Tiempo de lectura (min)
-          <input
+        </Field>
+        <Field label="Tiempo de lectura (min)">
+          <Input
             name="reading_time"
             type="number"
             min={1}
             defaultValue={initialValue?.reading_time ?? ""}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -152,24 +143,21 @@ export default function ArticleForm({
           />
           Publicado
         </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Fecha de publicación
-          <input
+        <Field label="Fecha de publicación">
+          <Input
             name="published_at"
             type="datetime-local"
             defaultValue={toDatetimeLocal(initialValue?.published_at ?? null)}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Tecnologías
+      <Field label="Tecnologías">
         <select
           name="technology_ids"
           multiple
           defaultValue={initialValue?.technologies.map((tech) => tech.id) ?? []}
-          className={`${inputClass} h-32`}
+          className={cx(FORM_CONTROL_CLASS, "h-32")}
         >
           {technologies.map((technology) => (
             <option key={technology.id} value={technology.id}>
@@ -177,18 +165,18 @@ export default function ArticleForm({
             </option>
           ))}
         </select>
-      </label>
+      </Field>
 
-      <button
+      <Button
         type="submit"
         disabled={status === "submitting"}
-        className="focus-ring mt-2 w-fit rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+        className="mt-2 w-fit"
       >
         {status === "submitting" ? "Guardando..." : submitLabel}
-      </button>
+      </Button>
 
       {status === "error" && errorMessage && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger">
           {errorMessage}
         </p>
       )}

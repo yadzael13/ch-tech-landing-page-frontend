@@ -5,6 +5,11 @@ import Link from "next/link";
 import { deleteService, getAdminServices } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ServiceItem } from "@/lib/api/types";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 
 export default function AdminServicesPage() {
   const { authedFetch, isLoading: isAuthLoading } = useAuth();
@@ -12,6 +17,7 @@ export default function AdminServicesPage() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
+  const [pendingDelete, setPendingDelete] = useState<ServiceItem | null>(null);
 
   useEffect(() => {
     // Wait for AuthContext's own mount-time silent refresh to settle first —
@@ -29,16 +35,13 @@ export default function AdminServicesPage() {
       .catch(() => setStatus("error"));
   }, [isAuthLoading, authedFetch]);
 
-  async function handleDelete(service: ServiceItem) {
-    if (
-      !window.confirm(
-        `¿Eliminar "${service.title}"? Esta acción no se puede deshacer.`,
-      )
-    ) {
-      return;
-    }
-    await deleteService(authedFetch, service.id);
-    setServices((current) => current.filter((item) => item.id !== service.id));
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    await deleteService(authedFetch, pendingDelete.id);
+    setServices((current) =>
+      current.filter((item) => item.id !== pendingDelete.id),
+    );
+    setPendingDelete(null);
   }
 
   return (
@@ -47,22 +50,19 @@ export default function AdminServicesPage() {
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
           Services
         </h1>
-        <Link
-          href="/admin/services/new"
-          className="focus-ring rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98]"
-        >
+        <Button href="/admin/services/new" size="sm">
           Nuevo servicio
-        </Link>
+        </Button>
       </div>
 
+      {status === "loading" && <SkeletonTable columns={5} />}
+
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar los servicios.
-        </p>
+        <ErrorState message="No fue posible cargar los servicios." />
       )}
 
       {status === "ready" && services.length === 0 && (
-        <p className="mt-6 text-sm text-muted">Aún no hay servicios.</p>
+        <EmptyState message="Aún no hay servicios." />
       )}
 
       {status === "ready" && services.length > 0 && (
@@ -101,8 +101,8 @@ export default function AdminServicesPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleDelete(service)}
-                        className="focus-ring rounded text-red-400 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
+                        onClick={() => setPendingDelete(service)}
+                        className="focus-ring rounded text-danger transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
                       >
                         Eliminar
                       </button>
@@ -114,6 +114,20 @@ export default function AdminServicesPage() {
           </table>
         </div>
       )}
+
+      <Dialog
+        open={pendingDelete !== null}
+        title="¿Eliminar servicio?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.title}" se eliminará. Esta acción no se puede deshacer.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

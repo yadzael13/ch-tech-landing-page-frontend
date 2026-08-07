@@ -6,6 +6,8 @@ import ProjectForm from "@/components/admin/ProjectForm";
 import { getAdminProject, updateProject } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ProjectDetail, ProjectWrite } from "@/lib/api/types";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonForm } from "@/components/ui/SkeletonForm";
 
 export default function EditProjectPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,13 +41,9 @@ export default function EditProjectPage() {
         Editar proyecto
       </h1>
 
-      {status === "loading" && (
-        <p className="mt-6 text-sm text-muted">Cargando...</p>
-      )}
+      {status === "loading" && <SkeletonForm fields={10} />}
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar el proyecto.
-        </p>
+        <ErrorState message="No fue posible cargar el proyecto." />
       )}
       {status === "ready" && project && (
         <div className="mt-6 max-w-2xl">

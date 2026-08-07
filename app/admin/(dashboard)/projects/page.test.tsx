@@ -1,6 +1,12 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { API_URL, server } from "@/test/msw-server";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import AdminProjectsPage from "./page";
@@ -72,7 +78,7 @@ describe("AdminProjectsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("deletes a project after confirming", async () => {
+  it("deletes a project after confirming in the dialog", async () => {
     server.use(
       http.get(`${API_URL}/admin/projects`, () =>
         HttpResponse.json({
@@ -86,15 +92,40 @@ describe("AdminProjectsPage", () => {
         () => new HttpResponse(null, { status: 204 }),
       ),
     );
-    vi.spyOn(window, "confirm").mockReturnValue(true);
 
     renderPage();
     await screen.findByText("CH-TECH");
 
     fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Eliminar" }));
 
     await waitFor(() =>
       expect(screen.queryByText("CH-TECH")).not.toBeInTheDocument(),
     );
+  });
+
+  it("keeps the project when the delete dialog is cancelled", async () => {
+    server.use(
+      http.get(`${API_URL}/admin/projects`, () =>
+        HttpResponse.json({
+          success: true,
+          data: [sampleProject],
+          message: null,
+        }),
+      ),
+    );
+
+    renderPage();
+    await screen.findByText("CH-TECH");
+
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("CH-TECH")).toBeInTheDocument();
   });
 });

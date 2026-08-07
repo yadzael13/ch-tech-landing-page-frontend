@@ -7,6 +7,8 @@ import { getTechnology } from "@/lib/api/content";
 import { updateTechnology } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { TechnologyItem, TechnologyWrite } from "@/lib/api/types";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonForm } from "@/components/ui/SkeletonForm";
 
 export default function EditTechnologyPage() {
   const { id } = useParams<{ id: string }>();
@@ -36,13 +38,9 @@ export default function EditTechnologyPage() {
         Editar tecnología
       </h1>
 
-      {status === "loading" && (
-        <p className="mt-6 text-sm text-muted">Cargando...</p>
-      )}
+      {status === "loading" && <SkeletonForm fields={4} />}
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar la tecnología.
-        </p>
+        <ErrorState message="No fue posible cargar la tecnología." />
       )}
       {status === "ready" && technology && (
         <div className="mt-6 max-w-2xl">
