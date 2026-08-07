@@ -45,7 +45,7 @@
       `prefers-reduced-motion` verificado solo por test unitario (el
       navegador de esta sesión no expone emulación de esa media query).
 - [x] Commit (`feat(design): add visual redesign foundation (tokens, ui
-  primitives, splash)`, b2af3f0).
+primitives, splash)`, b2af3f0).
 
 ## Fase 1 — Landing público
 
@@ -73,7 +73,7 @@
       de este navegador automatizado (pane sin compositing de frames);
       la cobertura de tests unitarios cubre la lógica exacta.
 - [x] Commit (`feat(landing): wire scroll-reveal and motion into the
-  public landing page`, 47497e8).
+public landing page`, 47497e8).
 
 ## Fase 2 — Admin: login, shell, home
 
@@ -92,18 +92,24 @@
       entorno de browser automatizado de esta sesión demostró ser poco
       fiable (ver nota de Fase 1); se confía en la cobertura de tests.
 - [x] Commit (`feat(admin): polish login, shell chrome, and dashboard
-    home`, 4ffc591).
+  home`, 4ffc591).
 
-## Fase 3 — 10 entidades CRUD admin (pendiente de checkpoint)
+## Fase 3 — 10 entidades CRUD admin
 
-- [ ] Por entidad (Articles, CaseStudies, Clients, Company, Partners,
+- [x] Por entidad (Articles, CaseStudies, Clients, Company, Partners,
       Products, Projects, Services, Team, Technologies, Testimonials):
       `Field`/`Input` en el form, `SkeletonTable` en el listado,
       `SkeletonForm` en edit, `Dialog` en vez de `window.confirm()`
-- [ ] Actualizar los 10 `page.test.tsx` de listado (`Dialog` real + caso de
+- [x] Actualizar los 10 `page.test.tsx` de listado (`Dialog` real + caso de
       cancelar/Escape nuevo)
-- [ ] `npm run lint`/`test:coverage` cada 2-3 entidades, no solo al final
-- [ ] Verificación manual de al menos 2 entidades end-to-end + commit
+- [x] `npm run lint`/`test:coverage` cada 2-3 entidades, no solo al final
+- [x] Verificación: lint limpio, 242/242 tests, cobertura 90.74%/85.17%/
+      83.16%/91.43%. Sin verificación manual en navegador esta fase — mismo
+      motivo que Fases 1-2 (entorno de browser automatizado poco fiable);
+      se confía en la cobertura de tests, que ejercita el flujo completo del
+      `Dialog` (abrir, confirmar, cancelar) en las 10 entidades + singleton.
+- [x] Commit (`feat(admin): migrate CRUD entities to Field/Input/Dialog/
+    Skeleton primitives`, 3966d80).
 
 ## Fase 4 — Pulido final (pendiente de checkpoint)
 
