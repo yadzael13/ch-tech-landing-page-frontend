@@ -92,7 +92,7 @@ public landing page`, 47497e8).
       entorno de browser automatizado de esta sesión demostró ser poco
       fiable (ver nota de Fase 1); se confía en la cobertura de tests.
 - [x] Commit (`feat(admin): polish login, shell chrome, and dashboard
-  home`, 4ffc591).
+home`, 4ffc591).
 
 ## Fase 3 — 10 entidades CRUD admin
 
@@ -109,13 +109,28 @@ public landing page`, 47497e8).
       se confía en la cobertura de tests, que ejercita el flujo completo del
       `Dialog` (abrir, confirmar, cancelar) en las 10 entidades + singleton.
 - [x] Commit (`feat(admin): migrate CRUD entities to Field/Input/Dialog/
-    Skeleton primitives`, 3966d80).
+  Skeleton primitives`, 3966d80).
 
-## Fase 4 — Pulido final (pendiente de checkpoint)
+## Fase 4 — Pulido final
 
-- [ ] `app/not-found.tsx`
-- [ ] `app/loading.tsx` + `app/admin/(dashboard)/loading.tsx`
-- [ ] Barrido final de `text-red-400` restante
-- [ ] QA contra `.claude/skills/ui-ux-pro-max-skill/SKILL.md` en las 32 rutas
-- [ ] Contraste AA de `--color-danger`/`--color-warning`
-- [ ] Verificación + commit final
+- [x] `app/not-found.tsx` — 404 de marca (monograma "CH", `animate-fade-in-up`
+      escalonado, `<Button href="/">`) + test
+- [x] `app/loading.tsx` + `app/admin/(dashboard)/loading.tsx` — `<Spinner>`
+      en vez de blanco durante el render de servidor, + tests
+- [x] Barrido final de `text-red-400` restante — cero ocurrencias fuera de
+      los propios docs de esta spec (que documentan el historial, no código)
+- [x] QA contra `.claude/skills/ui-ux-pro-max-skill/SKILL.md` en las 32
+      rutas — barrido por grep: sin espaciado arbitrario (`mt-[13px]`), sin
+      `outline-none` desparejado (único uso es `.focus-ring` + su contraparte
+      `:focus-visible`), sin `<div onClick>` no semántico (el único caso es
+      el backdrop `aria-hidden` de `Dialog`, patrón estándar de modal),
+      `focus-ring` + hover + `transition-*` de 200ms consistente en todos
+      los elementos interactivos salvo la excepción ya documentada de
+      `app/global-error.tsx`
+- [x] Contraste AA de `--color-danger`/`--color-warning` — reverificado por
+      cálculo WCAG: danger 5.93:1 (fondo) / 5.43:1 (surface), warning
+      11.24:1 (fondo) / 10.28:1 (surface); ambos superan el mínimo 4.5:1
+- [x] Verificación: lint limpio, suite completa en verde, cobertura
+      90.76%/85.17%/83.29%/91.45%
+- [x] Commit (`feat: add not-found and route-level loading states`,
+      d2b1102)
