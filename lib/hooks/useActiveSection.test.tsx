@@ -39,8 +39,13 @@ function mockIntersectionObserver() {
 }
 
 function ActiveSectionProbe() {
-  const activeIndex = useActiveSection();
-  return <div data-testid="active-index">{activeIndex}</div>;
+  const { activeIndex, sectionCount } = useActiveSection();
+  return (
+    <div>
+      <div data-testid="active-index">{activeIndex}</div>
+      <div data-testid="section-count">{sectionCount}</div>
+    </div>
+  );
 }
 
 function renderWithSections(count: number) {
@@ -59,12 +64,28 @@ afterEach(() => {
 });
 
 describe("useActiveSection", () => {
-  it("defaults to index 0 before any intersection fires", () => {
+  it("defaults to index 0 and section count 0 before any intersection fires", () => {
     mockIntersectionObserver();
 
     const { getByTestId } = renderWithSections(3);
 
     expect(getByTestId("active-index")).toHaveTextContent("0");
+    expect(getByTestId("section-count")).toHaveTextContent("0");
+  });
+
+  it("reports how many top-level sections it found once the observer reports in", () => {
+    const { triggerIntersect, observe } = mockIntersectionObserver();
+
+    const { getByTestId } = renderWithSections(7);
+    // Real IntersectionObservers report each target's initial intersection
+    // shortly after observe() — simulate that here rather than reading
+    // sectionCount before any callback has fired.
+    triggerIntersect([
+      { isIntersecting: true, target: getByTestId("section-0") },
+    ]);
+
+    expect(observe).toHaveBeenCalledTimes(7);
+    expect(getByTestId("section-count")).toHaveTextContent("7");
   });
 
   it("creates exactly one IntersectionObserver regardless of section count", () => {
@@ -130,11 +151,12 @@ describe("useActiveSection", () => {
     expect(disconnect).toHaveBeenCalledTimes(1);
   });
 
-  it("falls back to index 0 when IntersectionObserver is unsupported", () => {
+  it("falls back to index 0 and section count 0 when IntersectionObserver is unsupported", () => {
     vi.stubGlobal("IntersectionObserver", undefined);
 
     const { getByTestId } = renderWithSections(3);
 
     expect(getByTestId("active-index")).toHaveTextContent("0");
+    expect(getByTestId("section-count")).toHaveTextContent("0");
   });
 });

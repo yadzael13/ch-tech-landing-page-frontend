@@ -10,6 +10,13 @@ interface UseActiveSectionOptions {
 const DEFAULT_THRESHOLD = 0.35;
 const DEFAULT_ROOT_MARGIN = "-20% 0px -20% 0px";
 
+interface ActiveSection {
+  /** Index (DOM order) of the section currently dominating the viewport. */
+  activeIndex: number;
+  /** Total top-level sections found under #main-content at mount. 0 before mount/on unsupported browsers. */
+  sectionCount: number;
+}
+
 /**
  * Tracks which top-level <section> under #main-content currently dominates
  * the viewport, by DOM order. Unlike useScrollReveal (one-shot: it
@@ -17,12 +24,19 @@ const DEFAULT_ROOT_MARGIN = "-20% 0px -20% 0px";
  * alive for the page's lifetime, since callers need the *current* dominant
  * section rather than a one-time reveal. Sections are matched by order, not
  * id, because not every section (e.g. Hero) has one.
+ *
+ * sectionCount is exposed alongside activeIndex so callers can tell "first"
+ * and "last" section apart (e.g. CircuitBoard's load/contact energy peaks)
+ * without hardcoding a section total that would drift if sections are added.
  */
 export function useActiveSection({
   threshold = DEFAULT_THRESHOLD,
   rootMargin = DEFAULT_ROOT_MARGIN,
-}: UseActiveSectionOptions = {}): number {
-  const [activeIndex, setActiveIndex] = useState(0);
+}: UseActiveSectionOptions = {}): ActiveSection {
+  const [state, setState] = useState<ActiveSection>({
+    activeIndex: 0,
+    sectionCount: 0,
+  });
   const intersectingRef = useRef<Set<Element>>(new Set());
 
   useEffect(() => {
@@ -38,6 +52,11 @@ export function useActiveSection({
     const intersecting = intersectingRef.current;
     intersecting.clear();
 
+    // sectionCount is set from inside this callback (an update from the
+    // external IntersectionObserver, not a synchronous effect-body
+    // setState) rather than eagerly in the effect — the browser reports
+    // each observed target's initial intersection almost immediately after
+    // observe() is called, so this costs no meaningful delay.
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -51,9 +70,11 @@ export function useActiveSection({
         const dominant = sections.findIndex((section) =>
           intersecting.has(section),
         );
-        if (dominant !== -1) {
-          setActiveIndex(dominant);
-        }
+
+        setState((current) => ({
+          activeIndex: dominant !== -1 ? dominant : current.activeIndex,
+          sectionCount: sections.length,
+        }));
       },
       { threshold, rootMargin },
     );
@@ -63,5 +84,5 @@ export function useActiveSection({
     return () => observer.disconnect();
   }, [threshold, rootMargin]);
 
-  return activeIndex;
+  return state;
 }

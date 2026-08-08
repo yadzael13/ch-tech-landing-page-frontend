@@ -151,6 +151,10 @@
 
 body {
   background-color: var(--color-background);
+  /* The last two layers are a faint PCB-style grid — matches the circuit
+   * reference image's graph-paper backdrop. Kept very low-contrast (4%
+   * mix) since it's a texture behind readable text on every section, not
+   * just decoration behind the ambient corner pockets. */
   background-image:
     radial-gradient(
       ellipse 900px 600px at 0% 0%,
@@ -161,8 +165,23 @@ body {
       ellipse 700px 500px at 100% 20%,
       color-mix(in srgb, var(--color-accent) 10%, transparent),
       transparent 60%
+    ),
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-accent) 4%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-accent) 4%, transparent) 1px,
+      transparent 1px
     );
-  background-repeat: no-repeat;
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-size:
+    auto,
+    auto,
+    32px 32px,
+    32px 32px;
   background-attachment: fixed;
   color: var(--color-foreground);
   font-family: var(--font-sans);
@@ -222,19 +241,77 @@ h4 {
 
 /* Ambient baseline vs. lit state for a CircuitBoard corner cluster — a
  * state transition (occasional, per section), not a loop, so it stays a
- * plain transition rather than another keyframe animation. */
+ * plain transition rather than another keyframe animation. --circuit-energy
+ * (0 at rest, 1 at the load/contact peaks — set inline by CircuitBoard from
+ * the section index it already tracks, no scroll listener involved) scales
+ * both states up together so the whole board visibly "breathes" at those
+ * two moments instead of just the active corner. */
 .circuit-cluster {
-  opacity: 0.14;
+  opacity: calc(0.22 + var(--circuit-energy, 0) * 0.2);
+  filter: drop-shadow(
+    0 0 3px color-mix(in srgb, var(--color-accent) 55%, transparent)
+  );
   transition:
-    opacity 400ms var(--ease-in-out),
-    filter 400ms var(--ease-in-out);
+    opacity 500ms var(--ease-in-out),
+    filter 500ms var(--ease-in-out);
 }
 
 .circuit-cluster--lit {
-  opacity: 0.3;
+  opacity: calc(0.44 + var(--circuit-energy, 0) * 0.32);
   filter: drop-shadow(
-    0 0 6px color-mix(in srgb, var(--color-accent) 70%, transparent)
+    0 0 calc(9px + var(--circuit-energy, 0) * 9px)
+      color-mix(in srgb, var(--color-accent) 82%, transparent)
   );
+}
+
+/* Post-entrance connect/retract: once the one-time draw-in (animate-circuit-
+ * draw) finishes, CircuitBoard switches each trace to this class and drives
+ * stroke-dashoffset from React state instead — 0 (fully connected) for the
+ * active cluster's traces, --circuit-retract-offset (partially withdrawn,
+ * never fully undrawn — this is still meant to read as ambient background)
+ * for every other cluster. */
+.circuit-trace {
+  transition: stroke-dashoffset 650ms var(--ease-in-out);
+}
+
+/* Pocket footprint: small everywhere below 1280px (mobile and most tablets
+ * — there's no real side gutter to fill there, sections run near
+ * full-width), then — only from 1280px up — grows to fill most of the
+ * actual empty margin outside the content column, computed from that
+ * column's real max-width rather than a generic viewport-percentage guess.
+ * The two variants target different columns on purpose: the bottom pockets
+ * sit alongside the general max-w-6xl (1152px) sections, but the top
+ * pockets sit alongside the Hero, whose copy is narrower (max-w-4xl,
+ * 896px) — more real gutter to work with, which is exactly why the top
+ * pockets can grow enough to "span the top" instead of staying a corner
+ * accent. Each ceiling matches its cluster's own viewBox width
+ * (circuitData.ts's TOP_W/BOTTOM_W) so at full size it renders at a clean
+ * native 1:1 scale. The top ceiling stays short enough relative to height
+ * (aspect-ratio 420/260, wide-not-tall) that it never risks meeting the
+ * bottom pockets on typical laptop screen heights. */
+.circuit-pocket {
+  width: clamp(40px, 6vw, 72px);
+  transition: width 300ms var(--ease-in-out);
+}
+
+/* Both tiers below are scaled to leave real headroom against each other:
+ * the top pockets sit under a fixed offset (TOP_CLUSTER_OFFSET in
+ * circuitData.ts, clears the sticky header), the bottom ones grow up from
+ * `bottom: 8%` — checked against a 700px-tall viewport (a conservative
+ * stand-in for a laptop with browser chrome eating into the real viewport)
+ * so the two never meet even at their largest. */
+@media (min-width: 1280px) {
+  .circuit-pocket--top {
+    /* 20% larger than the previous tier at every step (both the floor and
+     * the ceiling are the old values * 1.2; the gutter formula itself is
+     * scaled the same way: 1.2 * [(100vw - 896px)/2 - 40px] simplifies to
+     * (100vw - 896px) * 0.6 - 48px). */
+    width: clamp(108px, calc((100vw - 896px) * 0.6 - 48px), 504px);
+  }
+
+  .circuit-pocket--bottom {
+    width: clamp(100px, calc((100vw - 1152px) / 2 - 40px), 320px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
