@@ -119,7 +119,7 @@ export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
         aria-hidden="true"
         viewBox="0 0 1440 320"
         preserveAspectRatio="none"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-16 w-full opacity-70 md:h-24"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-32 w-full opacity-70 md:h-56"
       >
         <path
           d="M0,224L80,234.7C160,245,320,267,480,245.3C640,224,800,160,960,144C1120,128,1280,160,1360,176L1440,192L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"
