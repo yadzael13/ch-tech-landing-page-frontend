@@ -46,6 +46,7 @@
   --animate-float-slow: float-slow 10s ease-in-out infinite;
   --animate-circuit-draw: circuit-draw 900ms var(--ease-out) both;
   --animate-circuit-travel: circuit-travel 3.2s linear infinite;
+  --animate-caret-blink: caret-blink 1s step-end infinite;
 }
 
 @keyframes fade-in-up {
@@ -132,6 +133,16 @@
   }
 }
 
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 /* Plain custom properties, not Tailwind theme keys — consumed via arbitrary
  * value syntax (e.g. shadow-[var(--shadow-elevated)]) rather than an
  * auto-generated shadow-elevated utility, since only Dialog/SplashScreen
@@ -185,6 +196,30 @@ body {
   background-attachment: fixed;
   color: var(--color-foreground);
   font-family: var(--font-sans);
+}
+
+/* Same near-black + faint PCB grid as body, minus the two corner glows
+ * (those are viewport-anchored ambient lighting, not something that reads
+ * right repeated inside a half-width panel). For any block that needs its
+ * own opaque background — which necessarily paints over body's — while
+ * still keeping the page's grid texture instead of going flat. */
+.bg-grid {
+  background-color: var(--color-background);
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-accent) 4%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-accent) 4%, transparent) 1px,
+      transparent 1px
+    );
+  background-repeat: repeat, repeat;
+  background-size:
+    32px 32px,
+    32px 32px;
 }
 
 h1,

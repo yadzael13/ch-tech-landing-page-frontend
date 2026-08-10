@@ -47,7 +47,7 @@ export default function Navbar() {
   const isMenuClosing = phase === "closing";
 
   return (
-    <header className="sticky top-0 z-50 px-4 pt-4 md:px-6">
+    <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4 md:px-6">
       <nav
         aria-label="Principal"
         className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-border bg-surface/80 px-6 py-3 backdrop-blur-md"
