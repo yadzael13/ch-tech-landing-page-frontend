@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 import { useTypewriter } from "@/lib/hooks/useTypewriter";
 import { useScrollFade } from "@/lib/hooks/useScrollFade";
@@ -10,6 +11,12 @@ interface HeroVideoProps {
   headline: string;
   subtext: string;
 }
+
+// Doubles the video's real duration (half speed). There's no HTML attribute
+// for this — playbackRate only exists as a JS property on the element, set
+// once it exists and re-applied whenever prefers-reduced-motion flips the
+// video's `key` and remounts it with a fresh default rate of 1.
+const PLAYBACK_RATE = 0.5;
 
 /**
  * Client half of the hero: the logo video fills the left column, the
@@ -23,14 +30,25 @@ interface HeroVideoProps {
  * autoplay/loop are dropped so it just sits on its first frame as a static
  * image stand-in, the headline renders in full immediately (no typing
  * animation), and the caret stops blinking (global CSS guard in
- * globals.css neutralizes every animation, this one included). The copy's
- * opacity also tracks scroll position directly (useScrollFade, no CSS
- * transition racing it) — full opacity at the top, fading out over the
- * first 400px scrolled and back in on the way up — disabled under
- * prefers-reduced-motion, where the text just stays fully visible.
+ * globals.css neutralizes every animation, this one included). Playback
+ * runs at half speed (PLAYBACK_RATE) so the loop reads as noticeably
+ * slower/longer. The copy's opacity also tracks scroll position directly
+ * (useScrollFade, no CSS transition racing it) — full opacity at the top,
+ * fading out over the first 400px scrolled and back in on the way up —
+ * disabled under prefers-reduced-motion, where the text just stays fully
+ * visible. The wave divider straddles the section's own bottom edge
+ * (translate-y-1/2) rather than sitting fully inside it, so it visibly
+ * spills past the hero into whatever comes next.
  */
 export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = PLAYBACK_RATE;
+    }
+  }, [prefersReducedMotion]);
 
   const typedHeadline = useTypewriter(headline, !prefersReducedMotion);
 
@@ -38,9 +56,10 @@ export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
   const copyOpacity = prefersReducedMotion ? 1 : scrollFadeOpacity;
 
   return (
-    <section className="relative flex min-h-screen w-full flex-col overflow-hidden md:flex-row">
+    <section className="relative flex min-h-screen w-full flex-col md:flex-row">
       <div className="relative h-[50vh] w-full md:h-screen md:w-1/2">
         <video
+          ref={videoRef}
           key={String(prefersReducedMotion)}
           src="/videos/header-logo.mp4"
           muted
@@ -119,7 +138,7 @@ export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
         aria-hidden="true"
         viewBox="0 0 1440 320"
         preserveAspectRatio="none"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-32 w-full opacity-70 md:h-56"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-32 w-full translate-y-1/2 opacity-70 md:h-56"
       >
         <path
           d="M0,224L80,234.7C160,245,320,267,480,245.3C640,224,800,160,960,144C1120,128,1280,160,1360,176L1440,192L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"

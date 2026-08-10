@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
+import { useSectionReveal } from "@/lib/hooks/useSectionReveal";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -14,6 +15,7 @@ export default function Contact() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [messageError, setMessageError] = useState<string | null>(null);
+  const { ref, blockProps } = useSectionReveal<HTMLElement>();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,18 +61,23 @@ export default function Contact() {
   }
 
   return (
-    <section id="contacto" className="mx-auto max-w-2xl px-6 py-24">
-      <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-foreground">
+    <section ref={ref} id="contacto" className="mx-auto max-w-2xl px-6 py-24">
+      <h2
+        {...blockProps(
+          0,
+          "font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-foreground",
+        )}
+      >
         Contacto
       </h2>
-      <p className="mt-4 text-muted">
+      <p {...blockProps(1, "mt-4 text-muted")}>
         ¿Tienes un proyecto en mente? Cuéntanos los detalles.
       </p>
 
       <form
         onSubmit={handleSubmit}
-        className="mt-8 flex flex-col gap-4"
         noValidate
+        {...blockProps(2, "mt-8 flex flex-col gap-4")}
       >
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Nombre">

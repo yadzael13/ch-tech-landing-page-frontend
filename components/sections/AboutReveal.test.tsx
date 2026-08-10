@@ -3,21 +3,43 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { about } from "@/lib/content/site";
 import AboutReveal from "./AboutReveal";
 
-const { useScrollRevealMock } = vi.hoisted(() => ({
-  useScrollRevealMock: vi.fn(),
+const { useSectionRevealMock } = vi.hoisted(() => ({
+  useSectionRevealMock: vi.fn(),
 }));
 
-vi.mock("@/lib/hooks/useScrollReveal", () => ({
-  useScrollReveal: useScrollRevealMock,
+vi.mock("@/lib/hooks/useSectionReveal", () => ({
+  useSectionReveal: useSectionRevealMock,
 }));
 
-function setVisible(isVisible: boolean) {
-  useScrollRevealMock.mockReturnValue({ ref: vi.fn(), isVisible });
+function setEntranceStagger() {
+  useSectionRevealMock.mockReturnValue({
+    ref: vi.fn(),
+    isVisible: true,
+    blockProps: (index: number, className?: string) => ({
+      className: ["animate-fade-in-up-slow", className]
+        .filter(Boolean)
+        .join(" "),
+      style: { animationDelay: `${index * 150}ms` },
+    }),
+  });
+}
+
+function setExitStagger() {
+  useSectionRevealMock.mockReturnValue({
+    ref: vi.fn(),
+    isVisible: false,
+    blockProps: (index: number, className?: string) => ({
+      className: ["animate-fade-out-down-slow", className]
+        .filter(Boolean)
+        .join(" "),
+      style: { animationDelay: `${index * 150}ms` },
+    }),
+  });
 }
 
 describe("AboutReveal", () => {
   beforeEach(() => {
-    setVisible(true);
+    setEntranceStagger();
   });
 
   it("renders the title, intro and every differentiator point", () => {
@@ -33,7 +55,7 @@ describe("AboutReveal", () => {
   });
 
   it("staggers title, intro and the card grid in on entrance", () => {
-    setVisible(true);
+    setEntranceStagger();
     render(<AboutReveal intro="Our vision" />);
 
     const heading = screen.getByRole("heading", { name: about.title });
@@ -41,7 +63,6 @@ describe("AboutReveal", () => {
     const cardGrid = screen.getByRole("list");
 
     expect(heading).toHaveClass("animate-fade-in-up-slow");
-    expect(heading).not.toHaveClass("opacity-0");
     expect(heading).toHaveStyle({ animationDelay: "0ms" });
 
     expect(intro).toHaveClass("animate-fade-in-up-slow");
@@ -51,18 +72,21 @@ describe("AboutReveal", () => {
     expect(cardGrid).toHaveStyle({ animationDelay: "300ms" });
   });
 
-  it("fades every block out together, with no stagger, on exit", () => {
-    setVisible(false);
+  it("staggers title, intro and the card grid out the same way on exit", () => {
+    setExitStagger();
     render(<AboutReveal intro="Our vision" />);
 
     const heading = screen.getByRole("heading", { name: about.title });
     const intro = screen.getByText("Our vision");
     const cardGrid = screen.getByRole("list");
 
-    for (const block of [heading, intro, cardGrid]) {
-      expect(block).toHaveClass("opacity-0");
-      expect(block).not.toHaveClass("animate-fade-in-up-slow");
-      expect(block.style.animationDelay).toBe("");
-    }
+    expect(heading).toHaveClass("animate-fade-out-down-slow");
+    expect(heading).toHaveStyle({ animationDelay: "0ms" });
+
+    expect(intro).toHaveClass("animate-fade-out-down-slow");
+    expect(intro).toHaveStyle({ animationDelay: "150ms" });
+
+    expect(cardGrid).toHaveClass("animate-fade-out-down-slow");
+    expect(cardGrid).toHaveStyle({ animationDelay: "300ms" });
   });
 });

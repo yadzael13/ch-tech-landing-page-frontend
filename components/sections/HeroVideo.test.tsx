@@ -96,17 +96,28 @@ describe("HeroVideo", () => {
     expect(video).not.toHaveAttribute("loop");
   });
 
-  it("renders a wave divider at the foot of the hero", () => {
+  it("renders a wave divider straddling the hero's bottom edge", () => {
     const { container } = render(
       <HeroVideo headline="Headline" subtext="Subtext" />,
     );
 
     const wave = container.querySelector("section > svg");
     expect(wave).toBeInTheDocument();
-    expect(wave).toHaveClass("opacity-70");
+    expect(wave).toHaveClass("opacity-70", "bottom-0", "translate-y-1/2");
     expect(wave?.querySelector("path")).toHaveAttribute(
       "fill",
       "var(--color-background)",
+    );
+  });
+
+  it("plays the video at half speed", () => {
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
+
+    expect(container.querySelector("video")).toHaveProperty(
+      "playbackRate",
+      0.5,
     );
   });
 
