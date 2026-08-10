@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { RefObject } from "react";
 
 interface UseScrollScrubOptions {
@@ -9,22 +9,30 @@ interface UseScrollScrubOptions {
   enabled: boolean;
 }
 
+interface UseScrollScrubResult {
+  /** True once scroll has advanced the video to its last frame. */
+  isSettled: boolean;
+}
+
 /**
  * Drives a <video>'s currentTime from scroll position instead of native
- * playback. Progress is 0 while containerRef's top edge sits at the
- * viewport's top (page load) and reaches 1 once the container has scrolled
- * a full container-height past it — mapped to currentTime = (1 - progress)
- * * duration, so the video sits at its last frame at progress 0 (matching
- * where the mount-time autoplay-to-completion leaves it) and rewinds to the
- * first frame as the user scrolls down, playing forward again on the way
- * back up. No-ops entirely while `enabled` is false (e.g. prefers-reduced-
- * motion), leaving whatever frame the video already shows untouched.
+ * playback, for a full-viewport section that pins (position: sticky) while
+ * its containing block scrolls past. Progress is 0 while containerRef's top
+ * edge sits at the viewport's top (the pin has just engaged) and reaches 1
+ * once the container has scrolled by its own height minus one viewport (the
+ * pin is about to release) — mapped directly to currentTime = progress *
+ * duration, so the video advances frame by frame on the way down and
+ * rewinds on the way back up. No-ops while `enabled` is false (e.g.
+ * prefers-reduced-motion), leaving whatever frame the video already shows
+ * untouched.
  */
 export function useScrollScrub({
   containerRef,
   videoRef,
   enabled,
-}: UseScrollScrubOptions): void {
+}: UseScrollScrubOptions): UseScrollScrubResult {
+  const [isSettled, setIsSettled] = useState(false);
+
   useEffect(() => {
     if (!enabled) return;
 
@@ -41,10 +49,12 @@ export function useScrollScrub({
       if (!duration || Number.isNaN(duration)) return;
 
       const rect = container.getBoundingClientRect();
-      const range = rect.height || 1;
+      const scrollableDistance = rect.height - window.innerHeight;
+      const range = scrollableDistance > 0 ? scrollableDistance : 1;
       const progress = Math.min(1, Math.max(0, -rect.top / range));
 
-      video.currentTime = (1 - progress) * duration;
+      video.currentTime = progress * duration;
+      setIsSettled(progress >= 1);
     };
 
     const onScroll = () => {
@@ -59,4 +69,6 @@ export function useScrollScrub({
       if (frame !== null) cancelAnimationFrame(frame);
     };
   }, [containerRef, videoRef, enabled]);
+
+  return { isSettled };
 }

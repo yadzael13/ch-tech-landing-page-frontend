@@ -1,5 +1,5 @@
-import { renderHook } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useScrollScrub } from "./useScrollScrub";
 
 function setupNodes({
@@ -35,33 +35,116 @@ function setupNodes({
     configurable: true,
   });
 
-  return { container, video };
+  // Stable ref objects, matching what useRef() hands a real component: the
+  // same object identity across re-renders. Passing a fresh `{ current }`
+  // literal on every render (as the renderHook callback would otherwise do)
+  // changes useScrollScrub's effect dependencies on each render, forcing it
+  // to tear down and re-run — which resets isSettled right after it settles.
+  const containerRef = { current: container };
+  const videoRef = { current: video };
+
+  return { container, video, containerRef, videoRef };
 }
 
 function dispatchScrollAndFlush() {
-  window.dispatchEvent(new Event("scroll"));
-  vi.runOnlyPendingTimers();
+  act(() => {
+    window.dispatchEvent(new Event("scroll"));
+    vi.runOnlyPendingTimers();
+  });
 }
 
 describe("useScrollScrub", () => {
+  beforeEach(() => {
+    vi.stubGlobal("innerHeight", 800);
+  });
+
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("does nothing when disabled", () => {
     vi.useFakeTimers();
-    const { container, video } = setupNodes({
-      top: -50,
-      height: 200,
+    const { video, containerRef, videoRef } = setupNodes({
+      top: -100,
+      height: 1800,
+      duration: 10,
+    });
+
+    const { result } = renderHook(() =>
+      useScrollScrub({
+        containerRef,
+        videoRef,
+        enabled: false,
+      }),
+    );
+
+    dispatchScrollAndFlush();
+
+    expect(video.currentTime).toBe(0);
+    expect(result.current.isSettled).toBe(false);
+  });
+
+  it("advances currentTime forward through the pinned scroll range", () => {
+    vi.useFakeTimers();
+    // scrollableDistance = height(1800) - innerHeight(800) = 1000
+    // progress = -top / range = 100 / 1000 = 0.1 -> currentTime = 1
+    const { video, containerRef, videoRef } = setupNodes({
+      top: -100,
+      height: 1800,
       duration: 10,
     });
 
     renderHook(() =>
       useScrollScrub({
-        containerRef: { current: container },
-        videoRef: { current: video },
-        enabled: false,
+        containerRef,
+        videoRef,
+        enabled: true,
+      }),
+    );
+
+    dispatchScrollAndFlush();
+
+    expect(video.currentTime).toBeCloseTo(1);
+  });
+
+  it("settles once scroll has advanced through the full pinned range", () => {
+    vi.useFakeTimers();
+    // top = -(height - innerHeight) -> progress = 1 -> last frame
+    const { video, containerRef, videoRef } = setupNodes({
+      top: -1000,
+      height: 1800,
+      duration: 10,
+    });
+
+    const { result } = renderHook(() =>
+      useScrollScrub({
+        containerRef,
+        videoRef,
+        enabled: true,
+      }),
+    );
+
+    dispatchScrollAndFlush();
+
+    expect(video.currentTime).toBeCloseTo(10);
+    expect(result.current.isSettled).toBe(true);
+  });
+
+  it("clamps progress to the [0, 1] range", () => {
+    vi.useFakeTimers();
+    const { video, containerRef, videoRef } = setupNodes({
+      top: 50,
+      height: 1800,
+      duration: 10,
+    });
+
+    renderHook(() =>
+      useScrollScrub({
+        containerRef,
+        videoRef,
+        enabled: true,
       }),
     );
 
@@ -70,61 +153,18 @@ describe("useScrollScrub", () => {
     expect(video.currentTime).toBe(0);
   });
 
-  it("sets currentTime from scroll progress through the container", () => {
-    vi.useFakeTimers();
-    // top: -50, height: 200 -> progress 0.25 -> currentTime = (1 - 0.25) * 10
-    const { container, video } = setupNodes({
-      top: -50,
-      height: 200,
-      duration: 10,
-    });
-
-    renderHook(() =>
-      useScrollScrub({
-        containerRef: { current: container },
-        videoRef: { current: video },
-        enabled: true,
-      }),
-    );
-
-    dispatchScrollAndFlush();
-
-    expect(video.currentTime).toBeCloseTo(7.5);
-  });
-
-  it("clamps progress to the [0, 1] range", () => {
-    vi.useFakeTimers();
-    const { container, video } = setupNodes({
-      top: 50,
-      height: 200,
-      duration: 10,
-    });
-
-    renderHook(() =>
-      useScrollScrub({
-        containerRef: { current: container },
-        videoRef: { current: video },
-        enabled: true,
-      }),
-    );
-
-    dispatchScrollAndFlush();
-
-    expect(video.currentTime).toBeCloseTo(10);
-  });
-
   it("ignores scroll while duration is not yet known", () => {
     vi.useFakeTimers();
-    const { container, video } = setupNodes({
-      top: -50,
-      height: 200,
+    const { video, containerRef, videoRef } = setupNodes({
+      top: -100,
+      height: 1800,
       duration: NaN,
     });
 
     renderHook(() =>
       useScrollScrub({
-        containerRef: { current: container },
-        videoRef: { current: video },
+        containerRef,
+        videoRef,
         enabled: true,
       }),
     );
@@ -136,17 +176,17 @@ describe("useScrollScrub", () => {
 
   it("removes the scroll listener on unmount", () => {
     vi.useFakeTimers();
-    const { container, video } = setupNodes({
-      top: -50,
-      height: 200,
+    const { containerRef, videoRef } = setupNodes({
+      top: -100,
+      height: 1800,
       duration: 10,
     });
     const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
 
     const { unmount } = renderHook(() =>
       useScrollScrub({
-        containerRef: { current: container },
-        videoRef: { current: video },
+        containerRef,
+        videoRef,
         enabled: true,
       }),
     );

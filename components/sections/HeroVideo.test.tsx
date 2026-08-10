@@ -5,7 +5,7 @@ import HeroVideo from "./HeroVideo";
 
 const { usePrefersReducedMotionMock, useScrollScrubMock } = vi.hoisted(() => ({
   usePrefersReducedMotionMock: vi.fn(() => false),
-  useScrollScrubMock: vi.fn(),
+  useScrollScrubMock: vi.fn(() => ({ isSettled: false })),
 }));
 
 vi.mock("@/lib/hooks/usePrefersReducedMotion", () => ({
@@ -19,7 +19,7 @@ vi.mock("@/lib/hooks/useScrollScrub", () => ({
 describe("HeroVideo", () => {
   beforeEach(() => {
     usePrefersReducedMotionMock.mockReturnValue(false);
-    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+    useScrollScrubMock.mockReturnValue({ isSettled: false });
   });
 
   afterEach(() => {
@@ -41,10 +41,14 @@ describe("HeroVideo", () => {
     ).toHaveAttribute("href", hero.secondaryCta.href);
   });
 
-  it("autoplays the logo video on mount when motion is not reduced", () => {
+  it("never autoplays the video — playback is entirely scroll-driven", () => {
+    const playSpy = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockResolvedValue(undefined);
+
     render(<HeroVideo headline="Headline" subtext="Subtext" />);
 
-    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
+    expect(playSpy).not.toHaveBeenCalled();
   });
 
   it("enables scroll-scrubbing when motion is not reduced", () => {
@@ -55,14 +59,48 @@ describe("HeroVideo", () => {
     );
   });
 
-  it("never autoplays or scroll-scrubs when the user prefers reduced motion", () => {
+  it("disables scroll-scrubbing when the user prefers reduced motion", () => {
     usePrefersReducedMotionMock.mockReturnValue(true);
 
     render(<HeroVideo headline="Headline" subtext="Subtext" />);
 
-    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
     expect(useScrollScrubMock).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: false }),
+    );
+  });
+
+  it("floats the video while scrubbing has not reached the last frame", () => {
+    useScrollScrubMock.mockReturnValue({ isSettled: false });
+
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
+
+    expect(container.querySelector("video")).toHaveClass("animate-float-slow");
+  });
+
+  it("stops floating once scrubbing has settled on the last frame", () => {
+    useScrollScrubMock.mockReturnValue({ isSettled: true });
+
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
+
+    expect(container.querySelector("video")).not.toHaveClass(
+      "animate-float-slow",
+    );
+  });
+
+  it("never floats when the user prefers reduced motion, even mid-scrub", () => {
+    usePrefersReducedMotionMock.mockReturnValue(true);
+    useScrollScrubMock.mockReturnValue({ isSettled: false });
+
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
+
+    expect(container.querySelector("video")).not.toHaveClass(
+      "animate-float-slow",
     );
   });
 
