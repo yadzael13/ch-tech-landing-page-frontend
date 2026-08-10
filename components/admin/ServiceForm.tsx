@@ -3,9 +3,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ServiceItem, ServiceWrite } from "@/lib/api/types";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent/60";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 
 interface ServiceFormProps {
   initialValue?: ServiceItem;
@@ -53,39 +54,33 @@ export default function ServiceForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Título
-          <input
+        <Field label="Título">
+          <Input
             name="title"
             type="text"
             required
             maxLength={255}
             defaultValue={initialValue?.title}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Slug
-          <input
+        </Field>
+        <Field label="Slug">
+          <Input
             name="slug"
             type="text"
             required
             maxLength={150}
             defaultValue={initialValue?.slug}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Descripción
-        <textarea
+      <Field label="Descripción">
+        <Textarea
           name="description"
           rows={4}
           defaultValue={initialValue?.description ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
       <div className="flex gap-6">
         <label className="flex items-center gap-2 text-sm text-muted">
@@ -108,16 +103,16 @@ export default function ServiceForm({
         </label>
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={status === "submitting"}
-        className="focus-ring mt-2 w-fit rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+        className="mt-2 w-fit"
       >
         {status === "submitting" ? "Guardando..." : submitLabel}
-      </button>
+      </Button>
 
       {status === "error" && errorMessage && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger">
           {errorMessage}
         </p>
       )}

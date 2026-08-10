@@ -6,6 +6,8 @@ import CaseStudyForm from "@/components/admin/CaseStudyForm";
 import { getAdminCaseStudy, updateCaseStudy } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { CaseStudyItem, CaseStudyWrite } from "@/lib/api/types";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonForm } from "@/components/ui/SkeletonForm";
 
 export default function EditCaseStudyPage() {
   const { id } = useParams<{ id: string }>();
@@ -37,13 +39,9 @@ export default function EditCaseStudyPage() {
         Editar caso de estudio
       </h1>
 
-      {status === "loading" && (
-        <p className="mt-6 text-sm text-muted">Cargando...</p>
-      )}
+      {status === "loading" && <SkeletonForm fields={5} />}
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar el caso de estudio.
-        </p>
+        <ErrorState message="No fue posible cargar el caso de estudio." />
       )}
       {status === "ready" && caseStudy && (
         <div className="mt-6 max-w-2xl">

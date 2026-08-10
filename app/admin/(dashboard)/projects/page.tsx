@@ -5,12 +5,20 @@ import Link from "next/link";
 import { deleteProject, getAdminProjects } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ProjectDetail } from "@/lib/api/types";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 
 export default function AdminProjectsPage() {
   const { authedFetch, isLoading: isAuthLoading } = useAuth();
   const [projects, setProjects] = useState<ProjectDetail[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
+  );
+  const [pendingDelete, setPendingDelete] = useState<ProjectDetail | null>(
+    null,
   );
 
   useEffect(() => {
@@ -32,16 +40,13 @@ export default function AdminProjectsPage() {
       .catch(() => setStatus("error"));
   }, [isAuthLoading, authedFetch]);
 
-  async function handleDelete(project: ProjectDetail) {
-    if (
-      !window.confirm(
-        `¿Eliminar "${project.title}"? Esta acción no se puede deshacer.`,
-      )
-    ) {
-      return;
-    }
-    await deleteProject(authedFetch, project.id);
-    setProjects((current) => current.filter((item) => item.id !== project.id));
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    await deleteProject(authedFetch, pendingDelete.id);
+    setProjects((current) =>
+      current.filter((item) => item.id !== pendingDelete.id),
+    );
+    setPendingDelete(null);
   }
 
   return (
@@ -50,22 +55,19 @@ export default function AdminProjectsPage() {
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
           Projects
         </h1>
-        <Link
-          href="/admin/projects/new"
-          className="focus-ring rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98]"
-        >
+        <Button href="/admin/projects/new" size="sm">
           Nuevo proyecto
-        </Link>
+        </Button>
       </div>
 
+      {status === "loading" && <SkeletonTable columns={6} />}
+
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar los proyectos.
-        </p>
+        <ErrorState message="No fue posible cargar los proyectos." />
       )}
 
       {status === "ready" && projects.length === 0 && (
-        <p className="mt-6 text-sm text-muted">Aún no hay proyectos.</p>
+        <EmptyState message="Aún no hay proyectos." />
       )}
 
       {status === "ready" && projects.length > 0 && (
@@ -104,8 +106,8 @@ export default function AdminProjectsPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleDelete(project)}
-                        className="focus-ring rounded text-red-400 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
+                        onClick={() => setPendingDelete(project)}
+                        className="focus-ring rounded text-danger transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
                       >
                         Eliminar
                       </button>
@@ -117,6 +119,20 @@ export default function AdminProjectsPage() {
           </table>
         </div>
       )}
+
+      <Dialog
+        open={pendingDelete !== null}
+        title="¿Eliminar proyecto?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.title}" se eliminará. Esta acción no se puede deshacer.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { siteMeta } from "@/lib/content/site";
+import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 
 export default function AdminShell({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated, logout } = useAuth();
@@ -23,8 +25,8 @@ export default function AdminShell({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted">
-        Cargando...
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner label="Verificando sesión" />
       </div>
     );
   }
@@ -115,13 +117,9 @@ export default function AdminShell({ children }: { children: ReactNode }) {
             >
               Partners
             </Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="focus-ring rounded-full border border-border px-4 py-1.5 text-sm text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent hover:text-accent active:scale-[0.98]"
-            >
+            <Button variant="secondary" size="sm" onClick={handleLogout}>
               Salir
-            </button>
+            </Button>
           </nav>
         </div>
       </header>

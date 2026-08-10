@@ -3,9 +3,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TeamMemberItem, TeamMemberWrite } from "@/lib/api/types";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent/60";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 
 interface TeamMemberFormProps {
   initialValue?: TeamMemberItem;
@@ -57,92 +58,72 @@ export default function TeamMemberForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Nombre
-          <input
+        <Field label="Nombre">
+          <Input
             name="name"
             type="text"
             required
             maxLength={150}
             defaultValue={initialValue?.name}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Rol
-          <input
+        </Field>
+        <Field label="Rol">
+          <Input
             name="role"
             type="text"
             required
             maxLength={150}
             defaultValue={initialValue?.role}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Biografía
-        <textarea
-          name="bio"
-          rows={4}
-          defaultValue={initialValue?.bio ?? ""}
-          className={inputClass}
-        />
-      </label>
+      <Field label="Biografía">
+        <Textarea name="bio" rows={4} defaultValue={initialValue?.bio ?? ""} />
+      </Field>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Foto (URL)
-          <input
+        <Field label="Foto (URL)">
+          <Input
             name="photo"
             type="url"
             defaultValue={initialValue?.photo ?? ""}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Usuario vinculado (ID, opcional)
-          <input
+        </Field>
+        <Field label="Usuario vinculado (ID, opcional)">
+          <Input
             name="user_id"
             type="text"
             defaultValue={initialValue?.user_id ?? ""}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          LinkedIn
-          <input
+        <Field label="LinkedIn">
+          <Input
             name="linkedin_url"
             type="url"
             defaultValue={initialValue?.linkedin_url ?? ""}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          GitHub
-          <input
+        </Field>
+        <Field label="GitHub">
+          <Input
             name="github_url"
             type="url"
             defaultValue={initialValue?.github_url ?? ""}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Orden
-          <input
+        <Field label="Orden">
+          <Input
             name="display_order"
             type="number"
             defaultValue={initialValue?.display_order ?? 0}
-            className={inputClass}
           />
-        </label>
+        </Field>
         <label className="flex items-center gap-2 self-end text-sm text-muted">
           <input
             name="active"
@@ -154,16 +135,16 @@ export default function TeamMemberForm({
         </label>
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={status === "submitting"}
-        className="focus-ring mt-2 w-fit rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+        className="mt-2 w-fit"
       >
         {status === "submitting" ? "Guardando..." : submitLabel}
-      </button>
+      </Button>
 
       {status === "error" && errorMessage && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger">
           {errorMessage}
         </p>
       )}

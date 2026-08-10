@@ -2,11 +2,32 @@
 
 import { useEffect, useRef, useState } from "react";
 import { hero, navLinks, siteMeta } from "@/lib/content/site";
+import { Button } from "@/components/ui/Button";
+import { cx } from "@/lib/cx";
+
+const MENU_EXIT_DURATION_MS = 150;
+
+type MenuPhase = "closed" | "open" | "closing";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [phase, setPhase] = useState<MenuPhase>("closed");
+  // Derives phase from isMenuOpen during render (same pattern as
+  // Dialog.tsx) rather than an effect, so a click is never a render behind.
+  const [prevMenuOpen, setPrevMenuOpen] = useState(isMenuOpen);
+  if (isMenuOpen !== prevMenuOpen) {
+    setPrevMenuOpen(isMenuOpen);
+    setPhase(isMenuOpen ? "open" : "closing");
+  }
+
   const toggleRef = useRef<HTMLButtonElement>(null);
   const firstLinkRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (phase !== "closing") return;
+    const timeout = setTimeout(() => setPhase("closed"), MENU_EXIT_DURATION_MS);
+    return () => clearTimeout(timeout);
+  }, [phase]);
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -22,8 +43,11 @@ export default function Navbar() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [isMenuOpen]);
 
+  const isMenuRendered = phase !== "closed";
+  const isMenuClosing = phase === "closing";
+
   return (
-    <header className="sticky top-0 z-50 px-4 pt-4 md:px-6">
+    <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4 md:px-6">
       <nav
         aria-label="Principal"
         className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-border bg-surface/80 px-6 py-3 backdrop-blur-md"
@@ -56,12 +80,9 @@ export default function Navbar() {
             />
             {hero.eyebrow}
           </span>
-          <a
-            href={hero.secondaryCta.href}
-            className="focus-ring rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98]"
-          >
+          <Button href={hero.secondaryCta.href} size="sm">
             {hero.secondaryCta.label}
-          </a>
+          </Button>
         </div>
 
         <button
@@ -76,10 +97,15 @@ export default function Navbar() {
         </button>
       </nav>
 
-      {isMenuOpen && (
+      {isMenuRendered && (
         <ul
           id="mobile-menu"
-          className="mx-auto flex max-w-6xl flex-col gap-4 rounded-2xl border border-border bg-surface/95 px-6 py-4 mt-2 backdrop-blur-md md:hidden"
+          className={cx(
+            "mx-auto flex max-w-6xl origin-top flex-col gap-4 rounded-2xl border border-border bg-surface/95 px-6 py-4 mt-2 backdrop-blur-md md:hidden",
+            isMenuClosing
+              ? "opacity-0 transition-opacity duration-150"
+              : "animate-scale-in",
+          )}
         >
           {navLinks.map((link, index) => (
             <li key={link.href}>

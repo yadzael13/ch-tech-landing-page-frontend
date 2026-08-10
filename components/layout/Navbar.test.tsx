@@ -1,7 +1,11 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { navLinks } from "@/lib/content/site";
 import Navbar from "./Navbar";
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("Navbar", () => {
   it("renders every nav link", () => {
@@ -40,5 +44,26 @@ describe("Navbar", () => {
 
     expect(screen.getByRole("button", { name: "Menú" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Menú" })).toHaveFocus();
+  });
+
+  it("plays an exit transition before the mobile menu unmounts", () => {
+    vi.useFakeTimers();
+    render(<Navbar />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Menú" }));
+    const menu = document.getElementById("mobile-menu");
+    expect(menu).toHaveClass("animate-scale-in");
+
+    fireEvent.click(screen.getByRole("button", { name: "Cerrar" }));
+    // Still in the DOM immediately after closing — exit animation plays first.
+    expect(document.getElementById("mobile-menu")).toHaveClass(
+      "transition-opacity",
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+
+    expect(document.getElementById("mobile-menu")).not.toBeInTheDocument();
   });
 });

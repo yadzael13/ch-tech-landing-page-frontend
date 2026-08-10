@@ -6,6 +6,11 @@ import { deletePartner } from "@/lib/api/admin";
 import { getPartners } from "@/lib/api/content";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { PartnerItem } from "@/lib/api/types";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 
 export default function AdminPartnersPage() {
   const { authedFetch } = useAuth();
@@ -13,6 +18,7 @@ export default function AdminPartnersPage() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
+  const [pendingDelete, setPendingDelete] = useState<PartnerItem | null>(null);
 
   useEffect(() => {
     // Public read (docs/API.md has no GET /admin/partners) — same reasoning
@@ -25,18 +31,13 @@ export default function AdminPartnersPage() {
       .catch(() => setStatus("error"));
   }, []);
 
-  async function handleDelete(partner: PartnerItem) {
-    if (
-      !window.confirm(
-        `¿Eliminar "${partner.name}"? Esta acción no se puede deshacer.`,
-      )
-    ) {
-      return;
-    }
-    await deletePartner(authedFetch, partner.id);
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    await deletePartner(authedFetch, pendingDelete.id);
     setPartners((current) =>
-      current.filter((item) => item.id !== partner.id),
+      current.filter((item) => item.id !== pendingDelete.id),
     );
+    setPendingDelete(null);
   }
 
   return (
@@ -45,22 +46,19 @@ export default function AdminPartnersPage() {
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
           Partners
         </h1>
-        <Link
-          href="/admin/partners/new"
-          className="focus-ring rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98]"
-        >
+        <Button href="/admin/partners/new" size="sm">
           Nuevo partner
-        </Link>
+        </Button>
       </div>
 
+      {status === "loading" && <SkeletonTable columns={3} />}
+
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar los partners.
-        </p>
+        <ErrorState message="No fue posible cargar los partners." />
       )}
 
       {status === "ready" && partners.length === 0 && (
-        <p className="mt-6 text-sm text-muted">Aún no hay partners.</p>
+        <EmptyState message="Aún no hay partners." />
       )}
 
       {status === "ready" && partners.length > 0 && (
@@ -79,9 +77,7 @@ export default function AdminPartnersPage() {
                   key={partner.id}
                   className="border-b border-border last:border-0"
                 >
-                  <td className="px-4 py-3 text-foreground">
-                    {partner.name}
-                  </td>
+                  <td className="px-4 py-3 text-foreground">{partner.name}</td>
                   <td className="px-4 py-3 text-muted">
                     {partner.partnership_type ?? "—"}
                   </td>
@@ -95,8 +91,8 @@ export default function AdminPartnersPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleDelete(partner)}
-                        className="focus-ring rounded text-red-400 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
+                        onClick={() => setPendingDelete(partner)}
+                        className="focus-ring rounded text-danger transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
                       >
                         Eliminar
                       </button>
@@ -108,6 +104,20 @@ export default function AdminPartnersPage() {
           </table>
         </div>
       )}
+
+      <Dialog
+        open={pendingDelete !== null}
+        title="¿Eliminar partner?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.name}" se eliminará. Esta acción no se puede deshacer.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

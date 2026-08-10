@@ -3,9 +3,11 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProductItem, ProductWrite } from "@/lib/api/types";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent/60";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { FORM_CONTROL_CLASS } from "@/components/ui/formControlClasses";
 
 const STATUS_OPTIONS = ["WAITLIST", "BETA", "LIVE"];
 
@@ -31,7 +33,8 @@ export default function ProductForm({
     const payload: ProductWrite = {
       slug: String(formData.get("slug") ?? ""),
       name: String(formData.get("name") ?? ""),
-      short_description: String(formData.get("short_description") ?? "") || null,
+      short_description:
+        String(formData.get("short_description") ?? "") || null,
       full_description: String(formData.get("full_description") ?? "") || null,
       status: String(formData.get("status") ?? "WAITLIST"),
       url: String(formData.get("url") ?? "") || null,
@@ -58,78 +61,61 @@ export default function ProductForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Nombre
-          <input
+        <Field label="Nombre">
+          <Input
             name="name"
             type="text"
             required
             maxLength={255}
             defaultValue={initialValue?.name}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Slug
-          <input
+        </Field>
+        <Field label="Slug">
+          <Input
             name="slug"
             type="text"
             required
             maxLength={150}
             defaultValue={initialValue?.slug}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Descripción corta
-        <input
+      <Field label="Descripción corta">
+        <Input
           name="short_description"
           type="text"
           defaultValue={initialValue?.short_description ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Descripción completa
-        <textarea
+      <Field label="Descripción completa">
+        <Textarea
           name="full_description"
           rows={5}
           defaultValue={initialValue?.full_description ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          URL
-          <input
-            name="url"
-            type="url"
-            defaultValue={initialValue?.url ?? ""}
-            className={inputClass}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Logo (URL)
-          <input
+        <Field label="URL">
+          <Input name="url" type="url" defaultValue={initialValue?.url ?? ""} />
+        </Field>
+        <Field label="Logo (URL)">
+          <Input
             name="logo"
             type="url"
             defaultValue={initialValue?.logo ?? ""}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Estado
+        <Field label="Estado">
           <select
             name="status"
             defaultValue={initialValue?.status ?? "WAITLIST"}
-            className={inputClass}
+            className={FORM_CONTROL_CLASS}
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -137,7 +123,7 @@ export default function ProductForm({
               </option>
             ))}
           </select>
-        </label>
+        </Field>
         <label className="flex items-center gap-2 self-end text-sm text-muted">
           <input
             name="featured"
@@ -149,16 +135,16 @@ export default function ProductForm({
         </label>
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={status === "submitting"}
-        className="focus-ring mt-2 w-fit rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+        className="mt-2 w-fit"
       >
         {status === "submitting" ? "Guardando..." : submitLabel}
-      </button>
+      </Button>
 
       {status === "error" && errorMessage && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger">
           {errorMessage}
         </p>
       )}

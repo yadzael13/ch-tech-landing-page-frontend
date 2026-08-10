@@ -6,12 +6,20 @@ import { getTechnologies } from "@/lib/api/content";
 import { deleteTechnology } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { TechnologyItem } from "@/lib/api/types";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 
 export default function AdminTechnologiesPage() {
   const { authedFetch } = useAuth();
   const [technologies, setTechnologies] = useState<TechnologyItem[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
+  );
+  const [pendingDelete, setPendingDelete] = useState<TechnologyItem | null>(
+    null,
   );
 
   useEffect(() => {
@@ -26,18 +34,13 @@ export default function AdminTechnologiesPage() {
       .catch(() => setStatus("error"));
   }, []);
 
-  async function handleDelete(technology: TechnologyItem) {
-    if (
-      !window.confirm(
-        `¿Eliminar "${technology.name}"? Esta acción no se puede deshacer.`,
-      )
-    ) {
-      return;
-    }
-    await deleteTechnology(authedFetch, technology.id);
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    await deleteTechnology(authedFetch, pendingDelete.id);
     setTechnologies((current) =>
-      current.filter((item) => item.id !== technology.id),
+      current.filter((item) => item.id !== pendingDelete.id),
     );
+    setPendingDelete(null);
   }
 
   return (
@@ -46,22 +49,19 @@ export default function AdminTechnologiesPage() {
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
           Technologies
         </h1>
-        <Link
-          href="/admin/technologies/new"
-          className="focus-ring rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98]"
-        >
+        <Button href="/admin/technologies/new" size="sm">
           Nueva tecnología
-        </Link>
+        </Button>
       </div>
 
+      {status === "loading" && <SkeletonTable columns={3} />}
+
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar las tecnologías.
-        </p>
+        <ErrorState message="No fue posible cargar las tecnologías." />
       )}
 
       {status === "ready" && technologies.length === 0 && (
-        <p className="mt-6 text-sm text-muted">Aún no hay tecnologías.</p>
+        <EmptyState message="Aún no hay tecnologías." />
       )}
 
       {status === "ready" && technologies.length > 0 && (
@@ -96,8 +96,8 @@ export default function AdminTechnologiesPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleDelete(technology)}
-                        className="focus-ring rounded text-red-400 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
+                        onClick={() => setPendingDelete(technology)}
+                        className="focus-ring rounded text-danger transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
                       >
                         Eliminar
                       </button>
@@ -109,6 +109,20 @@ export default function AdminTechnologiesPage() {
           </table>
         </div>
       )}
+
+      <Dialog
+        open={pendingDelete !== null}
+        title="¿Eliminar tecnología?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.name}" se eliminará. Esta acción no se puede deshacer.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

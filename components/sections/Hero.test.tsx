@@ -1,9 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { API_URL, server } from "@/test/msw-server";
 import { hero } from "@/lib/content/site";
 import Hero from "./Hero";
+
+vi.mock("@/lib/hooks/usePrefersReducedMotion", () => ({
+  usePrefersReducedMotion: vi.fn(() => false),
+}));
 
 const sampleCompany = {
   id: "1",

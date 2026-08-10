@@ -7,6 +7,8 @@ import { updateClient } from "@/lib/api/admin";
 import { getClients } from "@/lib/api/content";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ClientItem, ClientWrite } from "@/lib/api/types";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonForm } from "@/components/ui/SkeletonForm";
 
 export default function EditClientPage() {
   const { id } = useParams<{ id: string }>();
@@ -43,13 +45,9 @@ export default function EditClientPage() {
         Editar cliente
       </h1>
 
-      {status === "loading" && (
-        <p className="mt-6 text-sm text-muted">Cargando...</p>
-      )}
+      {status === "loading" && <SkeletonForm fields={4} />}
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar el cliente.
-        </p>
+        <ErrorState message="No fue posible cargar el cliente." />
       )}
       {status === "ready" && client && (
         <div className="mt-6 max-w-2xl">

@@ -6,6 +6,8 @@ import TeamMemberForm from "@/components/admin/TeamMemberForm";
 import { getAdminTeamMember, updateTeamMember } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { TeamMemberItem, TeamMemberWrite } from "@/lib/api/types";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonForm } from "@/components/ui/SkeletonForm";
 
 export default function EditTeamMemberPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,13 +41,9 @@ export default function EditTeamMemberPage() {
         Editar miembro
       </h1>
 
-      {status === "loading" && (
-        <p className="mt-6 text-sm text-muted">Cargando...</p>
-      )}
+      {status === "loading" && <SkeletonForm fields={7} />}
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar el miembro del equipo.
-        </p>
+        <ErrorState message="No fue posible cargar el miembro del equipo." />
       )}
       {status === "ready" && member && (
         <div className="mt-6 max-w-2xl">

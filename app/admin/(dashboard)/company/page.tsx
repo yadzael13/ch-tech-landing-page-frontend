@@ -7,6 +7,8 @@ import { getCompany } from "@/lib/api/content";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { CompanyItem, CompanyWrite } from "@/lib/api/types";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonForm } from "@/components/ui/SkeletonForm";
 
 export default function AdminCompanyPage() {
   const { authedFetch } = useAuth();
@@ -49,13 +51,9 @@ export default function AdminCompanyPage() {
         Perfil público de la empresa. Solo existe un registro.
       </p>
 
-      {status === "loading" && (
-        <p className="mt-6 text-sm text-muted">Cargando...</p>
-      )}
+      {status === "loading" && <SkeletonForm fields={8} />}
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar los datos de la empresa.
-        </p>
+        <ErrorState message="No fue posible cargar los datos de la empresa." />
       )}
       {status === "ready" && (
         <div className="mt-6 max-w-2xl">

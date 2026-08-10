@@ -2,9 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { CompanyItem, CompanyWrite } from "@/lib/api/types";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent/60";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
 
 interface CompanyFormProps {
   initialValue: CompanyItem | null;
@@ -17,9 +18,9 @@ export default function CompanyForm({
   onSubmit,
   submitLabel,
 }: CompanyFormProps) {
-  const [status, setStatus] = useState<"idle" | "submitting" | "error" | "saved">(
-    "idle",
-  );
+  const [status, setStatus] = useState<
+    "idle" | "submitting" | "error" | "saved"
+  >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -71,96 +72,79 @@ export default function CompanyForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Razón social
-          <input
+        <Field label="Razón social">
+          <Input
             name="legal_name"
             type="text"
             required
             maxLength={255}
             defaultValue={initialValue?.legal_name}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Nombre público
-          <input
+        </Field>
+        <Field label="Nombre público">
+          <Input
             name="display_name"
             type="text"
             required
             maxLength={150}
             defaultValue={initialValue?.display_name}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Tagline
-        <input
+      <Field label="Tagline">
+        <Input
           name="tagline"
           type="text"
           maxLength={255}
           defaultValue={initialValue?.tagline ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Misión
-        <textarea
+      <Field label="Misión">
+        <Textarea
           name="mission"
           rows={3}
           defaultValue={initialValue?.mission ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Visión
-        <textarea
+      <Field label="Visión">
+        <Textarea
           name="vision"
           rows={3}
           defaultValue={initialValue?.vision ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Email
-          <input
+        <Field label="Email">
+          <Input
             name="email"
             type="email"
             defaultValue={initialValue?.email ?? ""}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Teléfono
-          <input
+        </Field>
+        <Field label="Teléfono">
+          <Input
             name="phone"
             type="text"
             maxLength={50}
             defaultValue={initialValue?.phone ?? ""}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Dirección
-        <input
+      <Field label="Dirección">
+        <Input
           name="address"
           type="text"
           defaultValue={initialValue?.address ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Redes sociales (JSON)
-        <textarea
+      <Field label="Redes sociales (JSON)">
+        <Textarea
           name="social_links"
           rows={3}
           placeholder='{"linkedin": "https://linkedin.com/company/ch-tech"}'
@@ -169,24 +153,26 @@ export default function CompanyForm({
               ? JSON.stringify(initialValue.social_links, null, 2)
               : ""
           }
-          className={`${inputClass} font-mono text-xs`}
+          className="font-mono text-xs"
         />
-      </label>
+      </Field>
 
-      <button
+      <Button
         type="submit"
         disabled={status === "submitting"}
-        className="focus-ring mt-2 w-fit rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+        className="mt-2 w-fit"
       >
         {status === "submitting" ? "Guardando..." : submitLabel}
-      </button>
+      </Button>
 
       {status === "saved" && (
-        <p className="text-sm text-accent">Cambios guardados.</p>
+        <p role="status" className="text-sm text-accent">
+          Cambios guardados.
+        </p>
       )}
 
       {status === "error" && errorMessage && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger">
           {errorMessage}
         </p>
       )}

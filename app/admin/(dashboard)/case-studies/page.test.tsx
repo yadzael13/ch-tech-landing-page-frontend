@@ -1,6 +1,12 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { API_URL, server } from "@/test/msw-server";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import AdminCaseStudiesPage from "./page";
@@ -62,7 +68,7 @@ describe("AdminCaseStudiesPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("deletes a case study after confirming", async () => {
+  it("deletes a case study after confirming in the dialog", async () => {
     server.use(
       http.get(`${API_URL}/admin/case-studies`, () =>
         HttpResponse.json({
@@ -76,17 +82,42 @@ describe("AdminCaseStudiesPage", () => {
         () => new HttpResponse(null, { status: 204 }),
       ),
     );
-    vi.spyOn(window, "confirm").mockReturnValue(true);
 
     renderPage();
     await screen.findByText("Scale to 10x traffic");
 
     fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Eliminar" }));
 
     await waitFor(() =>
       expect(
         screen.queryByText("Scale to 10x traffic"),
       ).not.toBeInTheDocument(),
     );
+  });
+
+  it("keeps the case study when the delete dialog is cancelled", async () => {
+    server.use(
+      http.get(`${API_URL}/admin/case-studies`, () =>
+        HttpResponse.json({
+          success: true,
+          data: [sampleCaseStudy],
+          message: null,
+        }),
+      ),
+    );
+
+    renderPage();
+    await screen.findByText("Scale to 10x traffic");
+
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Scale to 10x traffic")).toBeInTheDocument();
   });
 });
