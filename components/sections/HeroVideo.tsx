@@ -2,8 +2,7 @@
 
 import { useRef } from "react";
 import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
-import { useScrollScrub } from "@/lib/hooks/useScrollScrub";
-import { cx } from "@/lib/cx";
+import { useVideoBoomerang } from "@/lib/hooks/useVideoBoomerang";
 import { hero } from "@/lib/content/site";
 
 interface HeroVideoProps {
@@ -11,53 +10,38 @@ interface HeroVideoProps {
   subtext: string;
 }
 
-// How much scroll distance the logo animation is scrubbed across, in
-// viewport heights. One of those heights is spent releasing the pin at the
-// end, so the remaining (SCRUB_HEIGHT_VH - 100) is the actual scrubbable
-// range — see useScrollScrub's scrollableDistance math.
-const SCRUB_HEIGHT_VH = 300;
-
 /**
- * Client half of the hero: a full-viewport pinned video of the logo, scroll-
- * scrubbed frame by frame (no autoplay), followed by the — now secondary —
- * copy and CTAs. Split out from Hero.tsx (a server component that still
- * owns the getCompany() fetch) because pinning/scrubbing need refs and
- * effects. With prefers-reduced-motion, the video neither scrubs nor floats
- * — it stays on its first frame as a static image stand-in.
+ * Client half of the hero: the logo video fills the left column, the
+ * (secondary) copy and CTAs sit on the right against a surface-tinted
+ * panel — a color separation only, no new page style. The video loops
+ * forward/reverse/forward indefinitely (see useVideoBoomerang) rather than
+ * reacting to scroll. With prefers-reduced-motion, it just sits paused on
+ * its first frame as a static image stand-in.
  */
 export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
-  const scrubRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  const { isSettled } = useScrollScrub({
-    containerRef: scrubRef,
+  useVideoBoomerang({
     videoRef,
     enabled: !prefersReducedMotion,
   });
 
-  const isFloating = !prefersReducedMotion && !isSettled;
-
   return (
-    <>
-      <div ref={scrubRef} style={{ height: `${SCRUB_HEIGHT_VH}vh` }}>
-        <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
-          <video
-            ref={videoRef}
-            src="/videos/header-logo.mp4"
-            muted
-            playsInline
-            preload="auto"
-            aria-hidden="true"
-            className={cx(
-              "h-full w-full object-contain",
-              isFloating && "animate-float-slow",
-            )}
-          />
-        </div>
+    <section className="relative flex min-h-screen w-full flex-col overflow-hidden md:flex-row">
+      <div className="relative h-[50vh] w-full md:h-screen md:w-1/2">
+        <video
+          ref={videoRef}
+          src="/videos/header-logo.mp4"
+          muted
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+          className="h-full w-full object-cover"
+        />
       </div>
 
-      <section className="mx-auto flex max-w-4xl flex-col items-start gap-6 px-6 py-16 md:py-24">
+      <div className="flex w-full flex-col items-start justify-center gap-6 bg-surface px-6 py-16 md:w-1/2 md:px-16 md:py-24">
         <span className="animate-fade-in-up rounded-full border border-border px-3 py-1 text-xs font-medium tracking-widest text-accent uppercase">
           {hero.eyebrow}
         </span>
@@ -73,7 +57,7 @@ export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
         <div className="animate-fade-in-up flex flex-wrap items-center gap-4 pt-2 [animation-delay:240ms]">
           <a
             href={hero.primaryCta.href}
-            className="focus-ring group flex items-center gap-3 rounded-full border border-border bg-surface py-2 pr-2 pl-6 text-sm font-medium text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent hover:shadow-[0_0_24px_-8px_var(--color-accent)] active:scale-[0.98]"
+            className="focus-ring group flex items-center gap-3 rounded-full border border-border bg-background py-2 pr-2 pl-6 text-sm font-medium text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent hover:shadow-[0_0_24px_-8px_var(--color-accent)] active:scale-[0.98]"
           >
             {hero.primaryCta.label}
             <span
@@ -102,7 +86,12 @@ export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
             {hero.secondaryCta.label}
           </a>
         </div>
-      </section>
-    </>
+      </div>
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent md:h-32"
+      />
+    </section>
   );
 }

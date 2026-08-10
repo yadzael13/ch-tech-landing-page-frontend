@@ -3,23 +3,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hero } from "@/lib/content/site";
 import HeroVideo from "./HeroVideo";
 
-const { usePrefersReducedMotionMock, useScrollScrubMock } = vi.hoisted(() => ({
-  usePrefersReducedMotionMock: vi.fn(() => false),
-  useScrollScrubMock: vi.fn(() => ({ isSettled: false })),
-}));
+const { usePrefersReducedMotionMock, useVideoBoomerangMock } = vi.hoisted(
+  () => ({
+    usePrefersReducedMotionMock: vi.fn(() => false),
+    useVideoBoomerangMock: vi.fn(),
+  }),
+);
 
 vi.mock("@/lib/hooks/usePrefersReducedMotion", () => ({
   usePrefersReducedMotion: usePrefersReducedMotionMock,
 }));
 
-vi.mock("@/lib/hooks/useScrollScrub", () => ({
-  useScrollScrub: useScrollScrubMock,
+vi.mock("@/lib/hooks/useVideoBoomerang", () => ({
+  useVideoBoomerang: useVideoBoomerangMock,
 }));
 
 describe("HeroVideo", () => {
   beforeEach(() => {
     usePrefersReducedMotionMock.mockReturnValue(false);
-    useScrollScrubMock.mockReturnValue({ isSettled: false });
   });
 
   afterEach(() => {
@@ -41,66 +42,21 @@ describe("HeroVideo", () => {
     ).toHaveAttribute("href", hero.secondaryCta.href);
   });
 
-  it("never autoplays the video — playback is entirely scroll-driven", () => {
-    const playSpy = vi
-      .spyOn(HTMLMediaElement.prototype, "play")
-      .mockResolvedValue(undefined);
-
+  it("enables the boomerang loop when motion is not reduced", () => {
     render(<HeroVideo headline="Headline" subtext="Subtext" />);
 
-    expect(playSpy).not.toHaveBeenCalled();
-  });
-
-  it("enables scroll-scrubbing when motion is not reduced", () => {
-    render(<HeroVideo headline="Headline" subtext="Subtext" />);
-
-    expect(useScrollScrubMock).toHaveBeenCalledWith(
+    expect(useVideoBoomerangMock).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: true }),
     );
   });
 
-  it("disables scroll-scrubbing when the user prefers reduced motion", () => {
+  it("disables the boomerang loop when the user prefers reduced motion", () => {
     usePrefersReducedMotionMock.mockReturnValue(true);
 
     render(<HeroVideo headline="Headline" subtext="Subtext" />);
 
-    expect(useScrollScrubMock).toHaveBeenCalledWith(
+    expect(useVideoBoomerangMock).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: false }),
-    );
-  });
-
-  it("floats the video while scrubbing has not reached the last frame", () => {
-    useScrollScrubMock.mockReturnValue({ isSettled: false });
-
-    const { container } = render(
-      <HeroVideo headline="Headline" subtext="Subtext" />,
-    );
-
-    expect(container.querySelector("video")).toHaveClass("animate-float-slow");
-  });
-
-  it("stops floating once scrubbing has settled on the last frame", () => {
-    useScrollScrubMock.mockReturnValue({ isSettled: true });
-
-    const { container } = render(
-      <HeroVideo headline="Headline" subtext="Subtext" />,
-    );
-
-    expect(container.querySelector("video")).not.toHaveClass(
-      "animate-float-slow",
-    );
-  });
-
-  it("never floats when the user prefers reduced motion, even mid-scrub", () => {
-    usePrefersReducedMotionMock.mockReturnValue(true);
-    useScrollScrubMock.mockReturnValue({ isSettled: false });
-
-    const { container } = render(
-      <HeroVideo headline="Headline" subtext="Subtext" />,
-    );
-
-    expect(container.querySelector("video")).not.toHaveClass(
-      "animate-float-slow",
     );
   });
 
@@ -113,5 +69,15 @@ describe("HeroVideo", () => {
       "aria-hidden",
       "true",
     );
+  });
+
+  it("gives the info panel a surface background, separate from the page background", () => {
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
+
+    const panel = container.querySelector(".bg-surface");
+    expect(panel).toBeInTheDocument();
+    expect(panel).toContainElement(screen.getByText("Subtext"));
   });
 });
