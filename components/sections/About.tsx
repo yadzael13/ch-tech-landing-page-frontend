@@ -18,6 +18,7 @@ export default async function About() {
       as="section"
       id="sobre-ch-tech"
       once={false}
+      slow
       className="mx-auto max-w-6xl px-6 py-24"
     >
       <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-foreground">

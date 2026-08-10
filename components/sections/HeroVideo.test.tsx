@@ -3,19 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hero } from "@/lib/content/site";
 import HeroVideo from "./HeroVideo";
 
-const { usePrefersReducedMotionMock, useScrollDirectionMock } = vi.hoisted(
-  () => ({
-    usePrefersReducedMotionMock: vi.fn(() => false),
-    useScrollDirectionMock: vi.fn(() => "up" as "up" | "down"),
-  }),
-);
+const { usePrefersReducedMotionMock, useScrollFadeMock } = vi.hoisted(() => ({
+  usePrefersReducedMotionMock: vi.fn(() => false),
+  useScrollFadeMock: vi.fn(() => 1),
+}));
 
 vi.mock("@/lib/hooks/usePrefersReducedMotion", () => ({
   usePrefersReducedMotion: usePrefersReducedMotionMock,
 }));
 
-vi.mock("@/lib/hooks/useScrollDirection", () => ({
-  useScrollDirection: useScrollDirectionMock,
+vi.mock("@/lib/hooks/useScrollFade", () => ({
+  useScrollFade: useScrollFadeMock,
 }));
 
 function visibleHeadline() {
@@ -29,7 +27,7 @@ function copyWrapper(container: HTMLElement) {
 describe("HeroVideo", () => {
   beforeEach(() => {
     usePrefersReducedMotionMock.mockReturnValue(false);
-    useScrollDirectionMock.mockReturnValue("up");
+    useScrollFadeMock.mockReturnValue(1);
   });
 
   afterEach(() => {
@@ -112,35 +110,35 @@ describe("HeroVideo", () => {
     );
   });
 
-  it("fades the copy out while the user is scrolling down", () => {
-    useScrollDirectionMock.mockReturnValue("down");
+  it("ties the copy's opacity directly to the scroll-fade value", () => {
+    useScrollFadeMock.mockReturnValue(0.4);
 
     const { container } = render(
       <HeroVideo headline="Headline" subtext="Subtext" />,
     );
 
-    expect(copyWrapper(container)).toHaveClass("opacity-0");
+    expect(copyWrapper(container)).toHaveStyle({ opacity: "0.4" });
   });
 
-  it("keeps the copy visible while the user is scrolling up", () => {
-    useScrollDirectionMock.mockReturnValue("up");
+  it("disables pointer events only once fully faded out", () => {
+    useScrollFadeMock.mockReturnValue(0);
 
     const { container } = render(
       <HeroVideo headline="Headline" subtext="Subtext" />,
     );
 
-    expect(copyWrapper(container)).not.toHaveClass("opacity-0");
+    expect(copyWrapper(container)).toHaveClass("pointer-events-none");
   });
 
-  it("never fades the copy on scroll when the user prefers reduced motion", () => {
+  it("keeps the copy fully visible regardless of scroll when the user prefers reduced motion", () => {
     usePrefersReducedMotionMock.mockReturnValue(true);
-    useScrollDirectionMock.mockReturnValue("down");
+    useScrollFadeMock.mockReturnValue(0);
 
     const { container } = render(
       <HeroVideo headline="Headline" subtext="Subtext" />,
     );
 
-    expect(copyWrapper(container)).not.toHaveClass("opacity-0");
+    expect(copyWrapper(container)).toHaveStyle({ opacity: "1" });
   });
 
   it("marks the video as decorative for assistive technology", () => {

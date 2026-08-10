@@ -2,7 +2,7 @@
 
 import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 import { useTypewriter } from "@/lib/hooks/useTypewriter";
-import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
+import { useScrollFade } from "@/lib/hooks/useScrollFade";
 import { cx } from "@/lib/cx";
 import { hero } from "@/lib/content/site";
 
@@ -23,18 +23,19 @@ interface HeroVideoProps {
  * autoplay/loop are dropped so it just sits on its first frame as a static
  * image stand-in, the headline renders in full immediately (no typing
  * animation), and the caret stops blinking (global CSS guard in
- * globals.css neutralizes every animation, this one included). The copy
- * also fades out while the user scrolls down and back in while scrolling
- * up (useScrollDirection) — disabled under prefers-reduced-motion, where
- * the text just stays put regardless of scroll.
+ * globals.css neutralizes every animation, this one included). The copy's
+ * opacity also tracks scroll position directly (useScrollFade, no CSS
+ * transition racing it) — full opacity at the top, fading out over the
+ * first 400px scrolled and back in on the way up — disabled under
+ * prefers-reduced-motion, where the text just stays fully visible.
  */
 export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
 
   const typedHeadline = useTypewriter(headline, !prefersReducedMotion);
 
-  const scrollDirection = useScrollDirection();
-  const isCopyHidden = !prefersReducedMotion && scrollDirection === "down";
+  const scrollFadeOpacity = useScrollFade();
+  const copyOpacity = prefersReducedMotion ? 1 : scrollFadeOpacity;
 
   return (
     <section className="relative flex min-h-screen w-full flex-col overflow-hidden md:flex-row">
@@ -54,9 +55,10 @@ export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
 
       <div className="bg-grid flex w-full flex-col items-start justify-center gap-6 px-6 py-16 md:w-1/2 md:px-16 md:py-24">
         <div
+          style={{ opacity: copyOpacity }}
           className={cx(
-            "flex flex-col items-start gap-6 transition-opacity duration-300 ease-in-out",
-            isCopyHidden && "pointer-events-none opacity-0",
+            "flex flex-col items-start gap-6",
+            copyOpacity === 0 && "pointer-events-none",
           )}
         >
           <span className="animate-fade-in-up rounded-full border border-border px-3 py-1 text-xs font-medium tracking-widest text-accent uppercase">
@@ -115,12 +117,12 @@ export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
 
       <svg
         aria-hidden="true"
-        viewBox="0 0 1440 120"
+        viewBox="0 0 1440 320"
         preserveAspectRatio="none"
         className="pointer-events-none absolute inset-x-0 bottom-0 h-16 w-full opacity-70 md:h-24"
       >
         <path
-          d="M0,32 C240,80 480,0 720,32 C960,64 1200,8 1440,32 L1440,120 L0,120 Z"
+          d="M0,224L80,234.7C160,245,320,267,480,245.3C640,224,800,160,960,144C1120,128,1280,160,1360,176L1440,192L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"
           fill="var(--color-background)"
         />
       </svg>

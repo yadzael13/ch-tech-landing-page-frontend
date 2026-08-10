@@ -39,6 +39,11 @@
    * guard below neutralizes all of these automatically — no per-animation
    * override needed. */
   --animate-fade-in-up: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* Same fade-in-up keyframe, stretched out — for section-level repeatable
+   * reveals (Reveal's `once={false}` mode), where the entrance/exit needs
+   * to read as a deliberate crossfade rather than the snappy 0.6s micro-
+   * animation used for small elements like badges and cards. */
+  --animate-fade-in-up-slow: fade-in-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-scale-in: scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
   --animate-splash-exit: splash-exit 0.5s ease-in-out forwards;
