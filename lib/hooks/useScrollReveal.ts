@@ -5,6 +5,14 @@ import { useCallback, useRef, useState } from "react";
 interface UseScrollRevealOptions {
   threshold?: number;
   rootMargin?: string;
+  /**
+   * Default true: reveal once, then disconnect (the original behavior).
+   * Pass false to keep observing indefinitely, toggling isVisible back to
+   * false whenever the element leaves the viewport again — for sections
+   * that should re-play their entrance (and its inverse, an exit) every
+   * time the user scrolls past them, in either direction.
+   */
+  once?: boolean;
 }
 
 interface UseScrollRevealResult<T extends HTMLElement> {
@@ -27,7 +35,7 @@ interface UseScrollRevealResult<T extends HTMLElement> {
 export function useScrollReveal<T extends HTMLElement = HTMLElement>(
   options: UseScrollRevealOptions = {},
 ): UseScrollRevealResult<T> {
-  const { threshold = 0.15, rootMargin = "0px" } = options;
+  const { threshold = 0.15, rootMargin = "0px", once = true } = options;
   const [isVisible, setIsVisible] = useState(true);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -44,11 +52,21 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
       setIsVisible(false);
 
       const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-            observer.disconnect();
+        (entries) => {
+          const entry = entries[0];
+          if (!entry) return;
+
+          if (once) {
+            // Never react to a post-disconnect callback (real
+            // IntersectionObservers don't fire one, but nothing here
+            // should depend on that guarantee for correctness).
+            if (entry.isIntersecting) {
+              setIsVisible(true);
+              observer.disconnect();
+            }
+            return;
           }
+          setIsVisible(entry.isIntersecting);
         },
         { threshold, rootMargin },
       );
@@ -56,7 +74,7 @@ export function useScrollReveal<T extends HTMLElement = HTMLElement>(
       observer.observe(node);
       observerRef.current = observer;
     },
-    [threshold, rootMargin],
+    [threshold, rootMargin, once],
   );
 
   return { ref, isVisible };

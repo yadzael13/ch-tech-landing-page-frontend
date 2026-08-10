@@ -3,22 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hero } from "@/lib/content/site";
 import HeroVideo from "./HeroVideo";
 
-const {
-  usePrefersReducedMotionMock,
-  useVideoBoomerangMock,
-  useScrollDirectionMock,
-} = vi.hoisted(() => ({
-  usePrefersReducedMotionMock: vi.fn(() => false),
-  useVideoBoomerangMock: vi.fn(),
-  useScrollDirectionMock: vi.fn(() => "up" as "up" | "down"),
-}));
+const { usePrefersReducedMotionMock, useScrollDirectionMock } = vi.hoisted(
+  () => ({
+    usePrefersReducedMotionMock: vi.fn(() => false),
+    useScrollDirectionMock: vi.fn(() => "up" as "up" | "down"),
+  }),
+);
 
 vi.mock("@/lib/hooks/usePrefersReducedMotion", () => ({
   usePrefersReducedMotion: usePrefersReducedMotionMock,
-}));
-
-vi.mock("@/lib/hooks/useVideoBoomerang", () => ({
-  useVideoBoomerang: useVideoBoomerangMock,
 }));
 
 vi.mock("@/lib/hooks/useScrollDirection", () => ({
@@ -83,21 +76,39 @@ describe("HeroVideo", () => {
     expect(visibleHeadline()).toHaveTextContent("Hi");
   });
 
-  it("enables the boomerang loop when motion is not reduced", () => {
-    render(<HeroVideo headline="Headline" subtext="Subtext" />);
-
-    expect(useVideoBoomerangMock).toHaveBeenCalledWith(
-      expect.objectContaining({ enabled: true }),
+  it("autoplays and loops the video natively when motion is not reduced", () => {
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
     );
+
+    const video = container.querySelector("video");
+    expect(video).toHaveAttribute("autoplay");
+    expect(video).toHaveAttribute("loop");
   });
 
-  it("disables the boomerang loop when the user prefers reduced motion", () => {
+  it("never autoplays or loops the video when the user prefers reduced motion", () => {
     usePrefersReducedMotionMock.mockReturnValue(true);
 
-    render(<HeroVideo headline="Headline" subtext="Subtext" />);
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
 
-    expect(useVideoBoomerangMock).toHaveBeenCalledWith(
-      expect.objectContaining({ enabled: false }),
+    const video = container.querySelector("video");
+    expect(video).not.toHaveAttribute("autoplay");
+    expect(video).not.toHaveAttribute("loop");
+  });
+
+  it("renders a wave divider at the foot of the hero", () => {
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
+
+    const wave = container.querySelector("section > svg");
+    expect(wave).toBeInTheDocument();
+    expect(wave).toHaveClass("opacity-70");
+    expect(wave?.querySelector("path")).toHaveAttribute(
+      "fill",
+      "var(--color-background)",
     );
   });
 

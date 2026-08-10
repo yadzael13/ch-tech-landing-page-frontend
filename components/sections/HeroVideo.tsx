@@ -1,8 +1,6 @@
 "use client";
 
-import { useRef } from "react";
 import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
-import { useVideoBoomerang } from "@/lib/hooks/useVideoBoomerang";
 import { useTypewriter } from "@/lib/hooks/useTypewriter";
 import { useScrollDirection } from "@/lib/hooks/useScrollDirection";
 import { cx } from "@/lib/cx";
@@ -18,24 +16,20 @@ interface HeroVideoProps {
  * (secondary) copy and CTAs sit on the right against a near-black panel —
  * matching the video's own backdrop, with the page's grid texture kept
  * (bg-grid) rather than going flat, since an opaque panel would otherwise
- * paint over body's background-image. The video loops forward/reverse/
- * forward indefinitely (see useVideoBoomerang) rather than reacting to
- * scroll. With prefers-reduced-motion, it sits paused on its first frame as
- * a static image stand-in, the headline renders in full immediately (no
- * typing animation), and the caret stops blinking (global CSS guard in
+ * paint over body's background-image. The video loops via the native
+ * autoplay/loop attributes (no JS playback control needed — this also
+ * sidesteps any client-hydration-timing gap, since the browser starts it
+ * straight from the server-rendered HTML). With prefers-reduced-motion,
+ * autoplay/loop are dropped so it just sits on its first frame as a static
+ * image stand-in, the headline renders in full immediately (no typing
+ * animation), and the caret stops blinking (global CSS guard in
  * globals.css neutralizes every animation, this one included). The copy
  * also fades out while the user scrolls down and back in while scrolling
  * up (useScrollDirection) — disabled under prefers-reduced-motion, where
  * the text just stays put regardless of scroll.
  */
 export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
-
-  useVideoBoomerang({
-    videoRef,
-    enabled: !prefersReducedMotion,
-  });
 
   const typedHeadline = useTypewriter(headline, !prefersReducedMotion);
 
@@ -46,11 +40,13 @@ export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
     <section className="relative flex min-h-screen w-full flex-col overflow-hidden md:flex-row">
       <div className="relative h-[50vh] w-full md:h-screen md:w-1/2">
         <video
-          ref={videoRef}
+          key={String(prefersReducedMotion)}
           src="/videos/header-logo.mp4"
           muted
           playsInline
           preload="auto"
+          autoPlay={!prefersReducedMotion}
+          loop={!prefersReducedMotion}
           aria-hidden="true"
           className="h-full w-full object-cover"
         />
@@ -117,10 +113,17 @@ export default function HeroVideo({ headline, subtext }: HeroVideoProps) {
         </div>
       </div>
 
-      <div
+      <svg
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent md:h-32"
-      />
+        viewBox="0 0 1440 120"
+        preserveAspectRatio="none"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-16 w-full opacity-70 md:h-24"
+      >
+        <path
+          d="M0,32 C240,80 480,0 720,32 C960,64 1200,8 1440,32 L1440,120 L0,120 Z"
+          fill="var(--color-background)"
+        />
+      </svg>
     </section>
   );
 }

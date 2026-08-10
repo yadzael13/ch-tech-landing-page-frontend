@@ -14,7 +14,12 @@ export default async function About() {
   }
 
   return (
-    <section id="sobre-ch-tech" className="mx-auto max-w-6xl px-6 py-24">
+    <Reveal
+      as="section"
+      id="sobre-ch-tech"
+      once={false}
+      className="mx-auto max-w-6xl px-6 py-24"
+    >
       <h2 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-foreground">
         {about.title}
       </h2>
@@ -41,6 +46,6 @@ export default async function About() {
           </Reveal>
         ))}
       </ol>
-    </section>
+    </Reveal>
   );
 }

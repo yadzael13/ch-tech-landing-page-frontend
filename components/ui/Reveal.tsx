@@ -13,18 +13,25 @@ interface RevealProps extends Omit<
   as?: RevealTag;
   children: ReactNode;
   delayMs?: number;
+  /**
+   * Default true: reveal once and leave it revealed. Pass false to also
+   * play the inverse (fade back to opacity-0) every time the element
+   * scrolls out of view, and re-reveal every time it scrolls back in.
+   */
+  once?: boolean;
 }
 
 export function Reveal({
   as,
   children,
   delayMs = 0,
+  once = true,
   className,
   style,
   ...rest
 }: RevealProps) {
   const Tag = as ?? "div";
-  const { ref, isVisible } = useScrollReveal<HTMLElement>();
+  const { ref, isVisible } = useScrollReveal<HTMLElement>({ once });
 
   const mergedStyle: CSSProperties = {
     ...style,

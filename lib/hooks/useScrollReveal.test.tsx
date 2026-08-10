@@ -34,8 +34,8 @@ function mockIntersectionObserver() {
   };
 }
 
-function RevealProbe() {
-  const { ref, isVisible } = useScrollReveal<HTMLDivElement>();
+function RevealProbe({ once }: { once?: boolean } = {}) {
+  const { ref, isVisible } = useScrollReveal<HTMLDivElement>({ once });
   return <div ref={ref}>{isVisible ? "visible" : "hidden"}</div>;
 }
 
@@ -75,5 +75,27 @@ describe("useScrollReveal", () => {
     render(<RevealProbe />);
 
     expect(screen.getByText("visible")).toBeInTheDocument();
+  });
+
+  describe("once: false", () => {
+    it("keeps observing, toggling visible/hidden every time intersection changes", () => {
+      const { triggerIntersect, observe, disconnect } =
+        mockIntersectionObserver();
+
+      render(<RevealProbe once={false} />);
+      expect(screen.getByText("hidden")).toBeInTheDocument();
+      expect(observe).toHaveBeenCalledTimes(1);
+
+      triggerIntersect(true);
+      expect(screen.getByText("visible")).toBeInTheDocument();
+      expect(disconnect).not.toHaveBeenCalled();
+
+      triggerIntersect(false);
+      expect(screen.getByText("hidden")).toBeInTheDocument();
+
+      triggerIntersect(true);
+      expect(screen.getByText("visible")).toBeInTheDocument();
+      expect(disconnect).not.toHaveBeenCalled();
+    });
   });
 });
