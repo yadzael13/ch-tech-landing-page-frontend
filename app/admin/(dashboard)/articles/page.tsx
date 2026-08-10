@@ -5,12 +5,20 @@ import Link from "next/link";
 import { deleteArticle, getAdminArticles } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ArticleDetail } from "@/lib/api/types";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 
 export default function AdminArticlesPage() {
   const { authedFetch, isLoading: isAuthLoading } = useAuth();
   const [articles, setArticles] = useState<ArticleDetail[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
+  );
+  const [pendingDelete, setPendingDelete] = useState<ArticleDetail | null>(
+    null,
   );
 
   useEffect(() => {
@@ -27,16 +35,13 @@ export default function AdminArticlesPage() {
       .catch(() => setStatus("error"));
   }, [isAuthLoading, authedFetch]);
 
-  async function handleDelete(article: ArticleDetail) {
-    if (
-      !window.confirm(
-        `¿Eliminar "${article.title}"? Esta acción no se puede deshacer.`,
-      )
-    ) {
-      return;
-    }
-    await deleteArticle(authedFetch, article.id);
-    setArticles((current) => current.filter((item) => item.id !== article.id));
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    await deleteArticle(authedFetch, pendingDelete.id);
+    setArticles((current) =>
+      current.filter((item) => item.id !== pendingDelete.id),
+    );
+    setPendingDelete(null);
   }
 
   return (
@@ -45,22 +50,19 @@ export default function AdminArticlesPage() {
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
           Articles
         </h1>
-        <Link
-          href="/admin/articles/new"
-          className="focus-ring rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98]"
-        >
+        <Button href="/admin/articles/new" size="sm">
           Nuevo artículo
-        </Link>
+        </Button>
       </div>
 
+      {status === "loading" && <SkeletonTable columns={4} />}
+
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar los artículos.
-        </p>
+        <ErrorState message="No fue posible cargar los artículos." />
       )}
 
       {status === "ready" && articles.length === 0 && (
-        <p className="mt-6 text-sm text-muted">Aún no hay artículos.</p>
+        <EmptyState message="Aún no hay artículos." />
       )}
 
       {status === "ready" && articles.length > 0 && (
@@ -95,8 +97,8 @@ export default function AdminArticlesPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleDelete(article)}
-                        className="focus-ring rounded text-red-400 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
+                        onClick={() => setPendingDelete(article)}
+                        className="focus-ring rounded text-danger transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
                       >
                         Eliminar
                       </button>
@@ -108,6 +110,20 @@ export default function AdminArticlesPage() {
           </table>
         </div>
       )}
+
+      <Dialog
+        open={pendingDelete !== null}
+        title="¿Eliminar artículo?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.title}" se eliminará. Esta acción no se puede deshacer.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

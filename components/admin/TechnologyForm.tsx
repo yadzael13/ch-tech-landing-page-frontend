@@ -3,9 +3,9 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TechnologyItem, TechnologyWrite } from "@/lib/api/types";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent/60";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
 
 interface TechnologyFormProps {
   initialValue?: TechnologyItem;
@@ -52,60 +52,52 @@ export default function TechnologyForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Nombre
-          <input
+        <Field label="Nombre">
+          <Input
             name="name"
             type="text"
             required
             maxLength={100}
             defaultValue={initialValue?.name}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Categoría
-          <input
+        </Field>
+        <Field label="Categoría">
+          <Input
             name="category"
             type="text"
             maxLength={100}
             defaultValue={initialValue?.category ?? ""}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Ícono (URL)
-          <input
+        <Field label="Ícono (URL)">
+          <Input
             name="icon"
             type="url"
             defaultValue={initialValue?.icon ?? ""}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Sitio oficial
-          <input
+        </Field>
+        <Field label="Sitio oficial">
+          <Input
             name="official_url"
             type="url"
             defaultValue={initialValue?.official_url ?? ""}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={status === "submitting"}
-        className="focus-ring mt-2 w-fit rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+        className="mt-2 w-fit"
       >
         {status === "submitting" ? "Guardando..." : submitLabel}
-      </button>
+      </Button>
 
       {status === "error" && errorMessage && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger">
           {errorMessage}
         </p>
       )}

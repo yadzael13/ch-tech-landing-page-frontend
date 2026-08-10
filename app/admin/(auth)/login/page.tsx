@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { siteMeta } from "@/lib/content/site";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
 
 type Status = "idle" | "submitting" | "error";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent/60";
 
 export default function AdminLoginPage() {
   const { login } = useAuth();
@@ -46,44 +47,48 @@ export default function AdminLoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
-        {siteMeta.name} — Admin
-      </h1>
-      <p className="mt-2 text-sm text-muted">Inicia sesión para continuar.</p>
-
-      <form
-        onSubmit={handleSubmit}
-        className="mt-8 flex flex-col gap-4"
-        noValidate
-      >
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Email
-          <input name="email" type="email" required className={inputClass} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Contraseña
-          <input
-            name="password"
-            type="password"
-            required
-            className={inputClass}
-          />
-        </label>
-
-        <button
-          type="submit"
-          disabled={status === "submitting"}
-          className="focus-ring mt-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+      <Card className="shadow-[var(--shadow-elevated)]">
+        <div
+          aria-hidden="true"
+          className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-background"
         >
-          {status === "submitting" ? "Ingresando..." : "Ingresar"}
-        </button>
+          <span className="font-[family-name:var(--font-display)] text-lg font-bold">
+            CH
+          </span>
+        </div>
 
-        {status === "error" && errorMessage && (
-          <p role="alert" className="text-sm text-red-400">
-            {errorMessage}
-          </p>
-        )}
-      </form>
+        <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
+          {siteMeta.name} — Admin
+        </h1>
+        <p className="mt-2 text-sm text-muted">Inicia sesión para continuar.</p>
+
+        <form
+          onSubmit={handleSubmit}
+          className="mt-8 flex flex-col gap-4"
+          noValidate
+        >
+          <Field label="Email">
+            <Input name="email" type="email" required />
+          </Field>
+          <Field label="Contraseña">
+            <Input name="password" type="password" required />
+          </Field>
+
+          <Button
+            type="submit"
+            disabled={status === "submitting"}
+            className="mt-2"
+          >
+            {status === "submitting" ? "Ingresando..." : "Ingresar"}
+          </Button>
+
+          {status === "error" && errorMessage && (
+            <p role="alert" className="text-sm text-danger">
+              {errorMessage}
+            </p>
+          )}
+        </form>
+      </Card>
     </main>
   );
 }

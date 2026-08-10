@@ -6,6 +6,11 @@ import { deleteClient } from "@/lib/api/admin";
 import { getClients } from "@/lib/api/content";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ClientItem } from "@/lib/api/types";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 
 export default function AdminClientsPage() {
   const { authedFetch } = useAuth();
@@ -13,6 +18,7 @@ export default function AdminClientsPage() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
+  const [pendingDelete, setPendingDelete] = useState<ClientItem | null>(null);
 
   useEffect(() => {
     // Public read (docs/API.md has no GET /admin/clients — see
@@ -25,16 +31,13 @@ export default function AdminClientsPage() {
       .catch(() => setStatus("error"));
   }, []);
 
-  async function handleDelete(client: ClientItem) {
-    if (
-      !window.confirm(
-        `¿Eliminar "${client.name}"? Esta acción no se puede deshacer.`,
-      )
-    ) {
-      return;
-    }
-    await deleteClient(authedFetch, client.id);
-    setClients((current) => current.filter((item) => item.id !== client.id));
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    await deleteClient(authedFetch, pendingDelete.id);
+    setClients((current) =>
+      current.filter((item) => item.id !== pendingDelete.id),
+    );
+    setPendingDelete(null);
   }
 
   return (
@@ -43,22 +46,19 @@ export default function AdminClientsPage() {
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
           Clients
         </h1>
-        <Link
-          href="/admin/clients/new"
-          className="focus-ring rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98]"
-        >
+        <Button href="/admin/clients/new" size="sm">
           Nuevo cliente
-        </Link>
+        </Button>
       </div>
 
+      {status === "loading" && <SkeletonTable columns={3} />}
+
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar los clientes.
-        </p>
+        <ErrorState message="No fue posible cargar los clientes." />
       )}
 
       {status === "ready" && clients.length === 0 && (
-        <p className="mt-6 text-sm text-muted">Aún no hay clientes.</p>
+        <EmptyState message="Aún no hay clientes." />
       )}
 
       {status === "ready" && clients.length > 0 && (
@@ -91,8 +91,8 @@ export default function AdminClientsPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleDelete(client)}
-                        className="focus-ring rounded text-red-400 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
+                        onClick={() => setPendingDelete(client)}
+                        className="focus-ring rounded text-danger transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
                       >
                         Eliminar
                       </button>
@@ -104,6 +104,20 @@ export default function AdminClientsPage() {
           </table>
         </div>
       )}
+
+      <Dialog
+        open={pendingDelete !== null}
+        title="¿Eliminar cliente?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.name}" se eliminará. Esta acción no se puede deshacer.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

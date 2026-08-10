@@ -7,13 +7,13 @@ import { updateTestimonial } from "@/lib/api/admin";
 import { getTestimonials } from "@/lib/api/content";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { TestimonialItem, TestimonialWrite } from "@/lib/api/types";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonForm } from "@/components/ui/SkeletonForm";
 
 export default function EditTestimonialPage() {
   const { id } = useParams<{ id: string }>();
   const { authedFetch } = useAuth();
-  const [testimonial, setTestimonial] = useState<TestimonialItem | null>(
-    null,
-  );
+  const [testimonial, setTestimonial] = useState<TestimonialItem | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
@@ -45,13 +45,9 @@ export default function EditTestimonialPage() {
         Editar testimonio
       </h1>
 
-      {status === "loading" && (
-        <p className="mt-6 text-sm text-muted">Cargando...</p>
-      )}
+      {status === "loading" && <SkeletonForm fields={6} />}
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar el testimonio.
-        </p>
+        <ErrorState message="No fue posible cargar el testimonio." />
       )}
       {status === "ready" && testimonial && (
         <div className="mt-6 max-w-2xl">

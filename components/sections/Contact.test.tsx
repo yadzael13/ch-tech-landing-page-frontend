@@ -56,11 +56,14 @@ describe("Contact", () => {
     // No MSW handler is registered for POST /contact here — if the component
     // sent a request anyway, the onUnhandledRequest: "error" setup would fail
     // this test, proving the short-message guard runs before any fetch.
-    expect(
-      await screen.findByText(
-        "El mensaje debe tener entre 20 y 5000 caracteres.",
-      ),
-    ).toBeInTheDocument();
+    const fieldError = await screen.findByText(
+      "El mensaje debe tener entre 20 y 5000 caracteres.",
+    );
+    expect(fieldError).toBeInTheDocument();
+
+    const messageField = screen.getByLabelText("Mensaje");
+    expect(messageField).toHaveAttribute("aria-invalid", "true");
+    expect(messageField).toHaveAttribute("aria-describedby", fieldError.id);
   });
 
   it("shows a rate-limit specific message on 429", async () => {

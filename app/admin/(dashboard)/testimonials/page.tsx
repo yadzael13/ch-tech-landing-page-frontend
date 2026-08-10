@@ -6,12 +6,20 @@ import { deleteTestimonial } from "@/lib/api/admin";
 import { getTestimonials } from "@/lib/api/content";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { TestimonialItem } from "@/lib/api/types";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 
 export default function AdminTestimonialsPage() {
   const { authedFetch } = useAuth();
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
+  );
+  const [pendingDelete, setPendingDelete] = useState<TestimonialItem | null>(
+    null,
   );
 
   useEffect(() => {
@@ -25,18 +33,13 @@ export default function AdminTestimonialsPage() {
       .catch(() => setStatus("error"));
   }, []);
 
-  async function handleDelete(testimonial: TestimonialItem) {
-    if (
-      !window.confirm(
-        `¿Eliminar el testimonio de "${testimonial.author_name}"? Esta acción no se puede deshacer.`,
-      )
-    ) {
-      return;
-    }
-    await deleteTestimonial(authedFetch, testimonial.id);
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    await deleteTestimonial(authedFetch, pendingDelete.id);
     setTestimonials((current) =>
-      current.filter((item) => item.id !== testimonial.id),
+      current.filter((item) => item.id !== pendingDelete.id),
     );
+    setPendingDelete(null);
   }
 
   return (
@@ -45,22 +48,19 @@ export default function AdminTestimonialsPage() {
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
           Testimonials
         </h1>
-        <Link
-          href="/admin/testimonials/new"
-          className="focus-ring rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98]"
-        >
+        <Button href="/admin/testimonials/new" size="sm">
           Nuevo testimonio
-        </Link>
+        </Button>
       </div>
 
+      {status === "loading" && <SkeletonTable columns={4} />}
+
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar los testimonios.
-        </p>
+        <ErrorState message="No fue posible cargar los testimonios." />
       )}
 
       {status === "ready" && testimonials.length === 0 && (
-        <p className="mt-6 text-sm text-muted">Aún no hay testimonios.</p>
+        <EmptyState message="Aún no hay testimonios." />
       )}
 
       {status === "ready" && testimonials.length > 0 && (
@@ -99,8 +99,8 @@ export default function AdminTestimonialsPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleDelete(testimonial)}
-                        className="focus-ring rounded text-red-400 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
+                        onClick={() => setPendingDelete(testimonial)}
+                        className="focus-ring rounded text-danger transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
                       >
                         Eliminar
                       </button>
@@ -112,6 +112,20 @@ export default function AdminTestimonialsPage() {
           </table>
         </div>
       )}
+
+      <Dialog
+        open={pendingDelete !== null}
+        title="¿Eliminar testimonio?"
+        description={
+          pendingDelete
+            ? `El testimonio de "${pendingDelete.author_name}" se eliminará. Esta acción no se puede deshacer.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

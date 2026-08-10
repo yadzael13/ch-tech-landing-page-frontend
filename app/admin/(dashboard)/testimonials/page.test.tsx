@@ -1,6 +1,12 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { API_URL, server } from "@/test/msw-server";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import AdminTestimonialsPage from "./page";
@@ -63,7 +69,7 @@ describe("AdminTestimonialsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("deletes a testimonial after confirming", async () => {
+  it("deletes a testimonial after confirming in the dialog", async () => {
     server.use(
       http.get(`${API_URL}/testimonials`, () =>
         HttpResponse.json({
@@ -77,15 +83,40 @@ describe("AdminTestimonialsPage", () => {
         () => new HttpResponse(null, { status: 204 }),
       ),
     );
-    vi.spyOn(window, "confirm").mockReturnValue(true);
 
     renderPage();
     await screen.findByText("Jane Doe");
 
     fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Eliminar" }));
 
     await waitFor(() =>
       expect(screen.queryByText("Jane Doe")).not.toBeInTheDocument(),
     );
+  });
+
+  it("keeps the testimonial when the delete dialog is cancelled", async () => {
+    server.use(
+      http.get(`${API_URL}/testimonials`, () =>
+        HttpResponse.json({
+          success: true,
+          data: [sampleTestimonial],
+          message: null,
+        }),
+      ),
+    );
+
+    renderPage();
+    await screen.findByText("Jane Doe");
+
+    fireEvent.click(screen.getByRole("button", { name: "Eliminar" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Jane Doe")).toBeInTheDocument();
   });
 });

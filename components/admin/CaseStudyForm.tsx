@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { getAdminProjects } from "@/lib/api/admin";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { CaseStudyItem, CaseStudyWrite, ProjectDetail } from "@/lib/api/types";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent/60";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Textarea } from "@/components/ui/Textarea";
+import { FORM_CONTROL_CLASS } from "@/components/ui/formControlClasses";
 
 interface CaseStudyFormProps {
   initialValue?: CaseStudyItem;
@@ -79,13 +80,12 @@ export default function CaseStudyForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Proyecto
+      <Field label="Proyecto">
         <select
           name="project_id"
           required
           defaultValue={initialValue?.project_id ?? ""}
-          className={inputClass}
+          className={FORM_CONTROL_CLASS}
         >
           <option value="" disabled>
             Selecciona un proyecto
@@ -96,51 +96,42 @@ export default function CaseStudyForm({
             </option>
           ))}
         </select>
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Desafío
-        <textarea
+      <Field label="Desafío">
+        <Textarea
           name="challenge"
           rows={3}
           defaultValue={initialValue?.challenge ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Solución
-        <textarea
+      <Field label="Solución">
+        <Textarea
           name="solution"
           rows={3}
           defaultValue={initialValue?.solution ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Arquitectura
-        <textarea
+      <Field label="Arquitectura">
+        <Textarea
           name="architecture"
           rows={3}
           defaultValue={initialValue?.architecture ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Lecciones aprendidas
-        <textarea
+      <Field label="Lecciones aprendidas">
+        <Textarea
           name="lessons_learned"
           rows={3}
           defaultValue={initialValue?.lessons_learned ?? ""}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Métricas (JSON)
-        <textarea
+      <Field label="Métricas (JSON)">
+        <Textarea
           name="metrics"
           rows={3}
           placeholder='{"uptime": "99.9%"}'
@@ -149,20 +140,20 @@ export default function CaseStudyForm({
               ? JSON.stringify(initialValue.metrics, null, 2)
               : ""
           }
-          className={`${inputClass} font-mono text-xs`}
+          className="font-mono text-xs"
         />
-      </label>
+      </Field>
 
-      <button
+      <Button
         type="submit"
         disabled={status === "submitting"}
-        className="focus-ring mt-2 w-fit rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+        className="mt-2 w-fit"
       >
         {status === "submitting" ? "Guardando..." : submitLabel}
-      </button>
+      </Button>
 
       {status === "error" && errorMessage && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger">
           {errorMessage}
         </p>
       )}

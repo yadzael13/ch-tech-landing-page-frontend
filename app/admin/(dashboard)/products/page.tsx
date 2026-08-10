@@ -6,6 +6,11 @@ import { deleteProduct } from "@/lib/api/admin";
 import { getProducts } from "@/lib/api/content";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ProductItem } from "@/lib/api/types";
+import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { SkeletonTable } from "@/components/ui/SkeletonTable";
 
 export default function AdminProductsPage() {
   const { authedFetch } = useAuth();
@@ -13,6 +18,7 @@ export default function AdminProductsPage() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
+  const [pendingDelete, setPendingDelete] = useState<ProductItem | null>(null);
 
   useEffect(() => {
     // Public read (docs/API.md has no GET /admin/products) — same reasoning
@@ -25,18 +31,13 @@ export default function AdminProductsPage() {
       .catch(() => setStatus("error"));
   }, []);
 
-  async function handleDelete(product: ProductItem) {
-    if (
-      !window.confirm(
-        `¿Eliminar "${product.name}"? Esta acción no se puede deshacer.`,
-      )
-    ) {
-      return;
-    }
-    await deleteProduct(authedFetch, product.id);
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    await deleteProduct(authedFetch, pendingDelete.id);
     setProducts((current) =>
-      current.filter((item) => item.id !== product.id),
+      current.filter((item) => item.id !== pendingDelete.id),
     );
+    setPendingDelete(null);
   }
 
   return (
@@ -45,22 +46,19 @@ export default function AdminProductsPage() {
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
           Products
         </h1>
-        <Link
-          href="/admin/products/new"
-          className="focus-ring rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98]"
-        >
+        <Button href="/admin/products/new" size="sm">
           Nuevo producto
-        </Link>
+        </Button>
       </div>
 
+      {status === "loading" && <SkeletonTable columns={5} />}
+
       {status === "error" && (
-        <p className="mt-6 text-sm text-red-400">
-          No fue posible cargar los productos.
-        </p>
+        <ErrorState message="No fue posible cargar los productos." />
       )}
 
       {status === "ready" && products.length === 0 && (
-        <p className="mt-6 text-sm text-muted">Aún no hay productos.</p>
+        <EmptyState message="Aún no hay productos." />
       )}
 
       {status === "ready" && products.length > 0 && (
@@ -81,9 +79,7 @@ export default function AdminProductsPage() {
                   key={product.id}
                   className="border-b border-border last:border-0"
                 >
-                  <td className="px-4 py-3 text-foreground">
-                    {product.name}
-                  </td>
+                  <td className="px-4 py-3 text-foreground">{product.name}</td>
                   <td className="px-4 py-3 text-muted">{product.slug}</td>
                   <td className="px-4 py-3 text-muted">{product.status}</td>
                   <td className="px-4 py-3 text-muted">
@@ -99,8 +95,8 @@ export default function AdminProductsPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleDelete(product)}
-                        className="focus-ring rounded text-red-400 transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
+                        onClick={() => setPendingDelete(product)}
+                        className="focus-ring rounded text-danger transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:opacity-80"
                       >
                         Eliminar
                       </button>
@@ -112,6 +108,20 @@ export default function AdminProductsPage() {
           </table>
         </div>
       )}
+
+      <Dialog
+        open={pendingDelete !== null}
+        title="¿Eliminar producto?"
+        description={
+          pendingDelete
+            ? `"${pendingDelete.name}" se eliminará. Esta acción no se puede deshacer.`
+            : undefined
+        }
+        confirmLabel="Eliminar"
+        destructive
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

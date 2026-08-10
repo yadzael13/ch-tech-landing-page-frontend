@@ -13,13 +13,181 @@
   --color-accent: #2ee6b8;
   --color-accent-2: #1a9e83;
 
+  /* Elevation scale — layered surfaces (dialogs, hovered cards, skeleton
+   * wells) that the original 7-token palette had no room for. */
+  --color-surface-raised: #131f1a;
+  --color-surface-sunken: #0a100d;
+  --color-border-strong: #2a3a36;
+
+  /* Semantic state tokens. Contrast-checked against both --color-background
+   * and --color-surface (>=5.4:1, WCAG AA for normal text) since these hexes
+   * are new, not part of the original evekayser.com.br clone. */
+  --color-danger: #f2545e;
+  --color-danger-surface: color-mix(
+    in srgb,
+    var(--color-danger) 14%,
+    var(--color-surface)
+  );
+  --color-warning: #f2b84f;
+
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display:
     var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* --animate-* theme keys auto-generate matching animate-* Tailwind
+   * utilities (Tailwind 4 convention). The global prefers-reduced-motion
+   * guard below neutralizes all of these automatically — no per-animation
+   * override needed. */
+  --animate-fade-in-up: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* Same fade-in-up keyframe, stretched out — for section-level repeatable
+   * reveals (Reveal's `once={false}` mode), where the entrance/exit needs
+   * to read as a deliberate crossfade rather than the snappy 0.6s micro-
+   * animation used for small elements like badges and cards. */
+  --animate-fade-in-up-slow: fade-in-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* Mirrors fade-in-up-slow for the exit direction — same duration/easing,
+   * opposite motion, so a section-level reveal (Reveal's once:false /
+   * useSectionReveal) can stagger blocks out just as deliberately as it
+   * staggers them in. */
+  --animate-fade-out-down-slow: fade-out-down 1.4s cubic-bezier(0.16, 1, 0.3, 1)
+    both;
+  --animate-scale-in: scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  --animate-splash-exit: splash-exit 0.5s ease-in-out forwards;
+  --animate-logo-pulse: logo-pulse 1.8s ease-in-out infinite;
+  --animate-float-slow: float-slow 10s ease-in-out infinite;
+  --animate-circuit-draw: circuit-draw 900ms var(--ease-out) both;
+  --animate-circuit-travel: circuit-travel 3.2s linear infinite;
+  --animate-caret-blink: caret-blink 1s step-end infinite;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-out-down {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 150% 0;
+  }
+}
+
+@keyframes splash-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes logo-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(12px, -16px);
+  }
+}
+
+/* stroke-dashoffset 1 -> 0 works for any path length because each circuit
+ * trace is authored with pathLength="1" (normalizes real geometry to a unit
+ * length), so no getTotalLength() measurement is needed at runtime. */
+@keyframes circuit-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes circuit-travel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Plain custom properties, not Tailwind theme keys — consumed via arbitrary
+ * value syntax (e.g. shadow-[var(--shadow-elevated)]) rather than an
+ * auto-generated shadow-elevated utility, since only Dialog/SplashScreen
+ * need them today. */
+:root {
+  --color-scrim: color-mix(in srgb, var(--color-background) 75%, transparent);
+  --shadow-elevated: 0 24px 48px -20px rgba(0, 0, 0, 0.55);
+  --shadow-glow-accent: 0 0 32px -8px
+    color-mix(in srgb, var(--color-accent) 60%, transparent);
+
+  /* Curated cubic-beziers, not the weak built-in ease-out/ease-in-out —
+   * shared across every hand-built animation, not just CircuitBoard. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 body {
   background-color: var(--color-background);
+  /* The last two layers are a faint PCB-style grid — matches the circuit
+   * reference image's graph-paper backdrop. Kept very low-contrast (4%
+   * mix) since it's a texture behind readable text on every section, not
+   * just decoration behind the ambient corner pockets. */
   background-image:
     radial-gradient(
       ellipse 900px 600px at 0% 0%,
@@ -30,11 +198,50 @@ body {
       ellipse 700px 500px at 100% 20%,
       color-mix(in srgb, var(--color-accent) 10%, transparent),
       transparent 60%
+    ),
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-accent) 4%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-accent) 4%, transparent) 1px,
+      transparent 1px
     );
-  background-repeat: no-repeat;
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-size:
+    auto,
+    auto,
+    32px 32px,
+    32px 32px;
   background-attachment: fixed;
   color: var(--color-foreground);
   font-family: var(--font-sans);
+}
+
+/* Same near-black + faint PCB grid as body, minus the two corner glows
+ * (those are viewport-anchored ambient lighting, not something that reads
+ * right repeated inside a half-width panel). For any block that needs its
+ * own opaque background — which necessarily paints over body's — while
+ * still keeping the page's grid texture instead of going flat. */
+.bg-grid {
+  background-color: var(--color-background);
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-accent) 4%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-accent) 4%, transparent) 1px,
+      transparent 1px
+    );
+  background-repeat: repeat, repeat;
+  background-size:
+    32px 32px,
+    32px 32px;
 }
 
 h1,
@@ -73,6 +280,95 @@ h4 {
 .focus-ring:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* Skeleton shimmer sweep — a moving highlight band over a sunken-surface
+ * block, paired with the animate-shimmer keyframe (background-position
+ * only) so the gradient itself lives here once instead of per-component. */
+.skeleton-shimmer {
+  background-color: var(--color-surface-sunken);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-foreground) 8%, transparent),
+    transparent
+  );
+  background-size: 200% 100%;
+}
+
+/* Ambient baseline vs. lit state for a CircuitBoard corner cluster — a
+ * state transition (occasional, per section), not a loop, so it stays a
+ * plain transition rather than another keyframe animation. --circuit-energy
+ * (0 at rest, 1 at the load/contact peaks — set inline by CircuitBoard from
+ * the section index it already tracks, no scroll listener involved) scales
+ * both states up together so the whole board visibly "breathes" at those
+ * two moments instead of just the active corner. */
+.circuit-cluster {
+  opacity: calc(0.22 + var(--circuit-energy, 0) * 0.2);
+  filter: drop-shadow(
+    0 0 3px color-mix(in srgb, var(--color-accent) 55%, transparent)
+  );
+  transition:
+    opacity 500ms var(--ease-in-out),
+    filter 500ms var(--ease-in-out);
+}
+
+.circuit-cluster--lit {
+  opacity: calc(0.44 + var(--circuit-energy, 0) * 0.32);
+  filter: drop-shadow(
+    0 0 calc(9px + var(--circuit-energy, 0) * 9px)
+      color-mix(in srgb, var(--color-accent) 82%, transparent)
+  );
+}
+
+/* Post-entrance connect/retract: once the one-time draw-in (animate-circuit-
+ * draw) finishes, CircuitBoard switches each trace to this class and drives
+ * stroke-dashoffset from React state instead — 0 (fully connected) for the
+ * active cluster's traces, --circuit-retract-offset (partially withdrawn,
+ * never fully undrawn — this is still meant to read as ambient background)
+ * for every other cluster. */
+.circuit-trace {
+  transition: stroke-dashoffset 650ms var(--ease-in-out);
+}
+
+/* Pocket footprint: small everywhere below 1280px (mobile and most tablets
+ * — there's no real side gutter to fill there, sections run near
+ * full-width), then — only from 1280px up — grows to fill most of the
+ * actual empty margin outside the content column, computed from that
+ * column's real max-width rather than a generic viewport-percentage guess.
+ * The two variants target different columns on purpose: the bottom pockets
+ * sit alongside the general max-w-6xl (1152px) sections, but the top
+ * pockets sit alongside the Hero, whose copy is narrower (max-w-4xl,
+ * 896px) — more real gutter to work with, which is exactly why the top
+ * pockets can grow enough to "span the top" instead of staying a corner
+ * accent. Each ceiling matches its cluster's own viewBox width
+ * (circuitData.ts's TOP_W/BOTTOM_W) so at full size it renders at a clean
+ * native 1:1 scale. The top ceiling stays short enough relative to height
+ * (aspect-ratio 420/260, wide-not-tall) that it never risks meeting the
+ * bottom pockets on typical laptop screen heights. */
+.circuit-pocket {
+  width: clamp(40px, 6vw, 72px);
+  transition: width 300ms var(--ease-in-out);
+}
+
+/* Both tiers below are scaled to leave real headroom against each other:
+ * the top pockets sit under a fixed offset (TOP_CLUSTER_OFFSET in
+ * circuitData.ts, clears the sticky header), the bottom ones grow up from
+ * `bottom: 8%` — checked against a 700px-tall viewport (a conservative
+ * stand-in for a laptop with browser chrome eating into the real viewport)
+ * so the two never meet even at their largest. */
+@media (min-width: 1280px) {
+  .circuit-pocket--top {
+    /* 20% larger than the previous tier at every step (both the floor and
+     * the ceiling are the old values * 1.2; the gutter formula itself is
+     * scaled the same way: 1.2 * [(100vw - 896px)/2 - 40px] simplifies to
+     * (100vw - 896px) * 0.6 - 48px). */
+    width: clamp(108px, calc((100vw - 896px) * 0.6 - 48px), 504px);
+  }
+
+  .circuit-pocket--bottom {
+    width: clamp(100px, calc((100vw - 1152px) / 2 - 40px), 320px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 import { server } from "@/test/msw-server";
 import { AuthProvider } from "@/lib/auth/AuthContext";
@@ -50,6 +50,20 @@ describe("AdminShell", () => {
     await waitFor(() =>
       expect(replaceMock).toHaveBeenCalledWith("/admin/login"),
     );
+    expect(screen.queryByText("Protected content")).not.toBeInTheDocument();
+  });
+
+  it("shows a spinner while the session check is in flight", async () => {
+    server.use(
+      http.post("/api/auth/refresh", async () => {
+        await delay("infinite");
+        return HttpResponse.json({ access_token: "tok" });
+      }),
+    );
+
+    renderShell();
+
+    expect(screen.getByRole("status")).toBeInTheDocument();
     expect(screen.queryByText("Protected content")).not.toBeInTheDocument();
   });
 });

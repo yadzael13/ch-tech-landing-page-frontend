@@ -11,9 +11,11 @@ import {
   TestimonialItem,
   TestimonialWrite,
 } from "@/lib/api/types";
-
-const inputClass =
-  "focus-ring rounded-lg border border-border bg-surface px-4 py-2 text-foreground transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:border-accent/60";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { FORM_CONTROL_CLASS } from "@/components/ui/formControlClasses";
 
 interface TestimonialFormProps {
   initialValue?: TestimonialItem;
@@ -78,36 +80,31 @@ export default function TestimonialForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Nombre del autor
-          <input
+        <Field label="Nombre del autor">
+          <Input
             name="author_name"
             type="text"
             required
             maxLength={150}
             defaultValue={initialValue?.author_name}
-            className={inputClass}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Rol del autor
-          <input
+        </Field>
+        <Field label="Rol del autor">
+          <Input
             name="author_role"
             type="text"
             maxLength={150}
             defaultValue={initialValue?.author_role ?? ""}
-            className={inputClass}
           />
-        </label>
+        </Field>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Cliente (opcional)
+        <Field label="Cliente (opcional)">
           <select
             name="client_id"
             defaultValue={initialValue?.client_id ?? ""}
-            className={inputClass}
+            className={FORM_CONTROL_CLASS}
           >
             <option value="">Sin cliente asociado</option>
             {clients.map((client) => (
@@ -116,13 +113,12 @@ export default function TestimonialForm({
               </option>
             ))}
           </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Proyecto (opcional)
+        </Field>
+        <Field label="Proyecto (opcional)">
           <select
             name="project_id"
             defaultValue={initialValue?.project_id ?? ""}
-            className={inputClass}
+            className={FORM_CONTROL_CLASS}
           >
             <option value="">Sin proyecto asociado</option>
             {projects.map((project) => (
@@ -131,32 +127,28 @@ export default function TestimonialForm({
               </option>
             ))}
           </select>
-        </label>
+        </Field>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm text-muted">
-        Testimonio
-        <textarea
+      <Field label="Testimonio">
+        <Textarea
           name="content"
           rows={4}
           required
           defaultValue={initialValue?.content}
-          className={inputClass}
         />
-      </label>
+      </Field>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-muted">
-          Calificación (1-5, opcional)
-          <input
+        <Field label="Calificación (1-5, opcional)">
+          <Input
             name="rating"
             type="number"
             min={1}
             max={5}
             defaultValue={initialValue?.rating ?? ""}
-            className={inputClass}
           />
-        </label>
+        </Field>
         <label className="flex items-center gap-2 self-end text-sm text-muted">
           <input
             name="featured"
@@ -168,16 +160,16 @@ export default function TestimonialForm({
         </label>
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={status === "submitting"}
-        className="focus-ring mt-2 w-fit rounded-full bg-accent px-6 py-3 text-sm font-medium text-background transition-[color,border-color,box-shadow,opacity,transform] duration-200 ease-in-out hover:shadow-[0_0_24px_-6px_var(--color-accent)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60"
+        className="mt-2 w-fit"
       >
         {status === "submitting" ? "Guardando..." : submitLabel}
-      </button>
+      </Button>
 
       {status === "error" && errorMessage && (
-        <p role="alert" className="text-sm text-red-400">
+        <p role="alert" className="text-sm text-danger">
           {errorMessage}
         </p>
       )}
