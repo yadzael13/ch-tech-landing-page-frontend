@@ -14,6 +14,7 @@ function createVideo({ duration }: { duration: number }) {
     configurable: true,
   });
   vi.spyOn(video, "play").mockResolvedValue(undefined);
+  vi.spyOn(video, "pause").mockImplementation(() => {});
   return video;
 }
 

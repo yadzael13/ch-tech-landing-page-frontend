@@ -3,12 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hero } from "@/lib/content/site";
 import HeroVideo from "./HeroVideo";
 
-const { usePrefersReducedMotionMock, useVideoBoomerangMock } = vi.hoisted(
-  () => ({
-    usePrefersReducedMotionMock: vi.fn(() => false),
-    useVideoBoomerangMock: vi.fn(),
-  }),
-);
+const {
+  usePrefersReducedMotionMock,
+  useVideoBoomerangMock,
+  useScrollDirectionMock,
+} = vi.hoisted(() => ({
+  usePrefersReducedMotionMock: vi.fn(() => false),
+  useVideoBoomerangMock: vi.fn(),
+  useScrollDirectionMock: vi.fn(() => "up" as "up" | "down"),
+}));
 
 vi.mock("@/lib/hooks/usePrefersReducedMotion", () => ({
   usePrefersReducedMotion: usePrefersReducedMotionMock,
@@ -18,13 +21,22 @@ vi.mock("@/lib/hooks/useVideoBoomerang", () => ({
   useVideoBoomerang: useVideoBoomerangMock,
 }));
 
+vi.mock("@/lib/hooks/useScrollDirection", () => ({
+  useScrollDirection: useScrollDirectionMock,
+}));
+
 function visibleHeadline() {
   return document.querySelector('h1 span[aria-hidden="true"]');
+}
+
+function copyWrapper(container: HTMLElement) {
+  return container.querySelector(".bg-grid > div");
 }
 
 describe("HeroVideo", () => {
   beforeEach(() => {
     usePrefersReducedMotionMock.mockReturnValue(false);
+    useScrollDirectionMock.mockReturnValue("up");
   });
 
   afterEach(() => {
@@ -87,6 +99,37 @@ describe("HeroVideo", () => {
     expect(useVideoBoomerangMock).toHaveBeenCalledWith(
       expect.objectContaining({ enabled: false }),
     );
+  });
+
+  it("fades the copy out while the user is scrolling down", () => {
+    useScrollDirectionMock.mockReturnValue("down");
+
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
+
+    expect(copyWrapper(container)).toHaveClass("opacity-0");
+  });
+
+  it("keeps the copy visible while the user is scrolling up", () => {
+    useScrollDirectionMock.mockReturnValue("up");
+
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
+
+    expect(copyWrapper(container)).not.toHaveClass("opacity-0");
+  });
+
+  it("never fades the copy on scroll when the user prefers reduced motion", () => {
+    usePrefersReducedMotionMock.mockReturnValue(true);
+    useScrollDirectionMock.mockReturnValue("down");
+
+    const { container } = render(
+      <HeroVideo headline="Headline" subtext="Subtext" />,
+    );
+
+    expect(copyWrapper(container)).not.toHaveClass("opacity-0");
   });
 
   it("marks the video as decorative for assistive technology", () => {

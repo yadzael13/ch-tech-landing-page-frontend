@@ -50,6 +50,12 @@ export function useVideoBoomerang({
     };
 
     const handleEnded = () => {
+      // Browsers already auto-pause on `ended`, but that's implicit browser
+      // behavior rather than something this code asserts — pausing
+      // explicitly here means the reverse leg never has to reason about
+      // whether native playback might still be advancing currentTime out
+      // from under our own rAF-driven writes to it.
+      video.pause();
       lastTimestamp = null;
       frame = requestAnimationFrame(stepReverse);
     };
