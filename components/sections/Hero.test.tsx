@@ -1,9 +1,21 @@
 import { render, screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { API_URL, server } from "@/test/msw-server";
 import { hero } from "@/lib/content/site";
 import Hero from "./Hero";
+
+vi.mock("@/lib/hooks/usePrefersReducedMotion", () => ({
+  usePrefersReducedMotion: vi.fn(() => false),
+}));
+
+beforeEach(() => {
+  vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 const sampleCompany = {
   id: "1",
